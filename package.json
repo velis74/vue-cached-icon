@@ -1,6 +1,6 @@
 {
   "name": "vue-cached-icon",
-  "version": "3.0.4",
+  "version": "3.0.5",
   "description": "Caching asynchronous icons loader for Vue. Supports Ionicons, Material Design Icons, Font Awesome, custom providers, SVG literals and URLs. Renders sanitised SVG with currentColor support.",
   "author": "Jure Erznožnik",
   "type": "module",
