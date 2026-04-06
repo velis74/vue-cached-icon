@@ -33,23 +33,22 @@ const loadSVG = async () => {
 
   if (!name) return; // Name is not defined, so don't render anything
   loadedSvg.value = '&hellip;'; // ellipsis while we're loading
-  if (hasCache()) {
-    // icon is already in cache
-    setLoadedSVG(await getCache());
-  } else if (name.toLowerCase().includes('<svg')) {
-    // icon is a svg image string literal
-    setLoadedSVG(name);
-  } else {
-    // if icon name contains a '/' character, we assume it's a network resource, otherwise an ion icon
-    const url = resolveProviderUrl(name);
-    try {
+  try {
+    if (hasCache()) {
+      // icon is already in cache
+      setLoadedSVG(await getCache());
+    } else if (name.toLowerCase().includes('<svg')) {
+      // icon is a svg image string literal
+      setLoadedSVG(name);
+    } else {
+      // if icon name contains a '/' character, we assume it's a network resource, otherwise an ion icon
+      const url = resolveProviderUrl(name);
       // first we set cache to axios promise
       const res1 = (await setCache(axios.get(url))) as ResolvedIconGetResponse;
       setLoadedSVG(setCache(augment(res1.data)) as string); // then to sanitized svg
-    } catch (err: unknown) {
-      console.error(`Failed loading CachedIcon. Wrong icon name or URL? (${url})`);
-      console.log(err);
     }
+  } catch (err: unknown) {
+    console.error(`Failed loading CachedIcon. Wrong icon name or URL? (${name})`, err);
   }
 };
 

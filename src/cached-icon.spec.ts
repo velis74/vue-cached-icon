@@ -35,10 +35,10 @@ describe('CachedIcon', () => {
   });
   it("emits event when rendered and there's a SVG in the DOM", async () => {
     globalCache.clear();
-    const icon1 = shallowMount(CachedIcon, { propsData: { name: 'accessibility-outline' } });
+    const icon1 = shallowMount(CachedIcon, { propsData: { name: 'ion-accessibility-outline' } });
     await flushPromises();
     // await icon1.vm.$nextTick();
-    expect(icon1.emitted('icon-loaded')).toStrictEqual([[true]]);
+    expect(icon1.emitted('icon-loaded')).toStrictEqual([['ion-accessibility-outline']]);
     expect(icon1.html()).toContain('svg');
   });
   it('loads the mocked SVG, not the actual requested SVG', async () => {
