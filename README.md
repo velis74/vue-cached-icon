@@ -8,7 +8,7 @@ Also supports svg string literals or urls as source.
 
 ## Demo
 
-https://www.velis.si/vue-caching-icon/
+https://www.velis.si/vue-cached-icon/
 
 ## Features
 
