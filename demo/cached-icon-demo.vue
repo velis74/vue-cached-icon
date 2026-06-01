@@ -35,7 +35,7 @@
     </p>
     <p>
       Icon, loaded from a custom url.<br />
-      <cached-icon class="bigger" name="/api/svg/logo_text.BI41GGsF.svg" />
+      <cached-icon class="bigger" name="https://www.velis.si/images/logo_text.svg" />
     </p>
     <p>
       And finally, one with literal svg <small>(and with a crude, brute-force animation too)</small><br />

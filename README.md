@@ -4,6 +4,8 @@ Caching icon loader with an emphasis for loading the icons directly from the CDN
 
 Also supports svg string literals or urls as source.
 
+![Demo](demo.gif)
+
 ## Demo
 
 https://www.velis.si/vue-caching-icon/
@@ -53,6 +55,12 @@ npm install --save vue-cached-icon
   }
 </script>
 ```
+
+## Contributing
+
+Contributions are welcome! Feel free to open an issue or submit a pull request.
+
+Please make sure your changes are well-tested and follow the existing code style.
 
 ## Credits
 
