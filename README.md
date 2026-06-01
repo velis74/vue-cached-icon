@@ -45,14 +45,8 @@ npm install --save vue-cached-icon
 ```
 
 ```javascript
-<script>
+<script setup>
   import { CachedIcon } from 'vue-cached-icon';
-
-  export default {
-    name: 'myAwesomeComponent',
-    components: { IonIcon },
-    ...
-  }
 </script>
 ```
 
