@@ -1,11 +1,12 @@
 <template>
-  <div v-if="loadedSvg" :key="loadedSvgKey" class="cached-icon-wrapper" v-html="loadedSvg" />
+  <span v-if="loadedSvg" :key="loadedSvgKey" class="cached-icon-wrapper" v-html="loadedSvg" />
 </template>
 
 <script setup lang="ts">
 import axios from 'axios';
 import { computed, ref, watch } from 'vue';
 
+import './inject-styles'; // installs the default icon styling, once per module
 import { globalCache, IconDefOrPromise, IconGetResponse, ResolvedIconGetResponse } from './cache';
 import { resolveProviderUrl } from './providers';
 import { augment } from './svg-augment';

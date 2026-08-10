@@ -29,7 +29,7 @@ describe('CachedIcon', () => {
     globalCache.clear();
     const icon1 = shallowMount(CachedIcon, { propsData: { name: 'accessibility-outline' } });
     await flushPromises();
-    expect(icon1.html()).toContain('div');
+    expect(icon1.html()).toContain('span');
     await icon1.setProps({ name: undefined });
     expect(icon1.html()).toMatch('');
   });
@@ -126,6 +126,23 @@ describe('CachedIcon', () => {
     });
     await flushPromises();
     expect(icon1.html()).toContain('puscica');
+  });
+  it('gives a size to icons that only declare a viewBox, and ships default styling', async () => {
+    globalCache.clear();
+    const icon1 = shallowMount(CachedIcon, { propsData: { name: 'ion-warning' } });
+    await flushPromises();
+    expect(icon1.html()).toContain('width="1em"');
+    expect(icon1.html()).toContain('height="1em"');
+    expect(document.head.querySelector('style[data-vue-cached-icon]')?.textContent).toContain('.cached-icon-wrapper');
+  });
+  it('keeps the size an icon declares for itself', async () => {
+    globalCache.clear();
+    const icon1 = shallowMount(CachedIcon, {
+      propsData: { name: '<svg width="32" height="32" viewBox="0 0 32 32"><path d="M0 0h32v32H0z"/></svg>' },
+    });
+    await flushPromises();
+    expect(icon1.html()).toContain('width="32"');
+    expect(icon1.html()).not.toContain('1em');
   });
   it('loads svg from local server resource', async () => {
     globalCache.clear();

@@ -20,6 +20,7 @@ https://www.velis.si/vue-cached-icon/
 * Register your own repositories using `registerIconProvider(prefix: string, urlBuilder: (name: string) => string)`
 * Caches loaded icons, there will be only one HTTP request per icon as long as the app is running
 * Applies currentColor to icons: if colour is not otherwise specified, icons will have same color as HTML text
+* Sizes icons to the surrounding text by default, see [Sizing and styling](#sizing-and-styling)
 
 ## Installing
 
@@ -49,6 +50,25 @@ npm install --save vue-cached-icon
   import { CachedIcon } from 'vue-cached-icon';
 </script>
 ```
+
+## Sizing and styling
+
+Icon sets ship their SVGs with a `viewBox` but no `width` / `height`, so the size has to come from the use site.
+This package provides it for you: the icon renders in an inline `<span class="cached-icon-wrapper">` sized at `1em`,
+so an icon is as big as the text around it and moves with the font size.
+
+Everything is a plain default that your own CSS overrides — the package stylesheet is prepended to `<head>`, so your
+rules win without `!important`:
+
+```css
+/* a fixed size */
+.cached-icon-wrapper { width: 24px; height: 24px; }
+
+/* or size a group of icons through the font */
+.toolbar .cached-icon-wrapper { font-size: 1.5rem; }
+```
+
+SVGs that declare their own `width` / `height` keep them.
 
 ## Contributing
 

@@ -24,6 +24,10 @@ export function augment(svg: string): string {
     // this will have zero effect if the svg actually defines its colours otherwise, e.g. by specifying fill="black"
     result = result.replace(/(<svg)(\s)(.*)/i, '$1 fill="currentColor" $3');
   }
+  // Icon sets ship a viewBox but no intrinsic size, so an unstyled svg collapses to nothing. These are presentation
+  // attributes, so any consumer CSS still wins over them.
+  if (!/<svg[^>]*\swidth=/i.test(result)) result = result.replace(/<svg\b/i, '<svg width="1em"');
+  if (!/<svg[^>]*\sheight=/i.test(result)) result = result.replace(/<svg\b/i, '<svg height="1em"');
   result = DOMPurify.sanitize(result, { USE_PROFILES: { svg: true }, ADD_TAGS: ['use'] });
   return result;
 }
