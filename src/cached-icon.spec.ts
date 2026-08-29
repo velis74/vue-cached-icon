@@ -12,6 +12,7 @@ vi.mock('axios', () => ({
       requestsCount += 1;
       if (url.includes('failure')) throw new Error('bad url');
       if (url.includes('test.svg')) return { data: '<svg id="kladivo"></svg>' };
+      if (url.includes('not-really-svg')) return { data: '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR' };
       return {
         data:
           '<svg xmlns="http://www.w3.org/2000/svg" class="ionicon" ' +
@@ -149,5 +150,26 @@ describe('CachedIcon', () => {
     const icon1 = shallowMount(CachedIcon, { propsData: { name: '/test.svg' } });
     await flushPromises();
     expect(icon1.html()).toContain('kladivo');
+  });
+  it('renders a raster image directly, without fetching or sanitizing it', async () => {
+    const rc = requestsCount;
+    globalCache.clear();
+    const icon1 = shallowMount(CachedIcon, { propsData: { name: '/images/photo.png' } });
+    await flushPromises();
+    expect(icon1.html()).toContain('<img src="/images/photo.png">');
+    expect(requestsCount).toEqual(rc); // no HTTP request made, the img tag lets the browser handle it
+  });
+  it('recognises raster extensions regardless of query string and case', async () => {
+    globalCache.clear();
+    const icon1 = shallowMount(CachedIcon, { propsData: { name: '/images/photo.JPEG?v=2' } });
+    await flushPromises();
+    expect(icon1.html()).toContain('<img src="/images/photo.JPEG?v=2">');
+  });
+  it('rejects a response that is not a valid SVG instead of sanitizing it blindly', async () => {
+    globalCache.clear();
+    const icon1 = shallowMount(CachedIcon, { propsData: { name: '/images/not-really-svg' } });
+    await flushPromises();
+    expect(icon1.html()).toContain('…'); // stays in loading state, same as any other failure
+    expect(icon1.html()).not.toContain('img');
   });
 });

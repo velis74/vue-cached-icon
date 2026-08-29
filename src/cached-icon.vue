@@ -1,5 +1,6 @@
 <template>
-  <span v-if="loadedSvg" :key="loadedSvgKey" class="cached-icon-wrapper" v-html="loadedSvg" />
+  <span v-if="imgSrc" class="cached-icon-wrapper"><img :src="imgSrc" /></span>
+  <span v-else-if="loadedSvg" :key="loadedSvgKey" class="cached-icon-wrapper" v-html="loadedSvg" />
 </template>
 
 <script setup lang="ts">
@@ -11,10 +12,15 @@ import { globalCache, IconDefOrPromise, IconGetResponse, ResolvedIconGetResponse
 import { resolveProviderUrl } from './providers';
 import { augment } from './svg-augment';
 
+// Raster images are handed to the browser as-is: it decodes and caches them natively, and there is nothing in a
+// pixel buffer for DOMPurify to sanitise, so the SVG fetch-and-sanitise path is skipped entirely for these.
+const RASTER_EXTENSION_RE = /\.(png|jpe?g|gif|webp|bmp|ico|avif)(?:[?#].*)?$/i;
+
 const props = defineProps<{ name?: string }>();
 const emit = defineEmits<{ (e: 'icon-loaded', name: string): void }>();
 
 const loadedSvg = ref('' as IconDefOrPromise);
+const imgSrc = ref('');
 const loadedSvgKey = computed(() =>
   (loadedSvg.value as IconGetResponse)?.then ? 'loading' : (loadedSvg.value as string),
 );
@@ -29,10 +35,15 @@ const setLoadedSVG = (svg: string) => {
   loadedSvg.value = augment(svg);
   emit('icon-loaded', props.name as string);
 };
+const setLoadedImg = (url: string) => {
+  imgSrc.value = url;
+  emit('icon-loaded', props.name as string);
+};
 const loadSVG = async () => {
   const name = props.name;
 
   if (!name) return; // Name is not defined, so don't render anything
+  imgSrc.value = '';
   loadedSvg.value = '&hellip;'; // ellipsis while we're loading
   try {
     if (hasCache()) {
@@ -44,9 +55,17 @@ const loadSVG = async () => {
     } else {
       // if icon name contains a '/' character, we assume it's a network resource, otherwise an ion icon
       const url = resolveProviderUrl(name);
-      // first we set cache to axios promise
-      const res1 = (await setCache(axios.get(url))) as ResolvedIconGetResponse;
-      setLoadedSVG(setCache(augment(res1.data)) as string); // then to sanitized svg
+      if (RASTER_EXTENSION_RE.test(url)) {
+        setLoadedImg(url);
+      } else {
+        // first we set cache to axios promise
+        const res1 = (await setCache(axios.get(url))) as ResolvedIconGetResponse;
+        const data = res1.data;
+        if (typeof data !== 'string' || !/<svg[\s>]/i.test(data)) {
+          throw new Error(`Response from "${url}" is not a valid SVG`);
+        }
+        setLoadedSVG(setCache(augment(data)) as string); // then to sanitized svg
+      }
     }
   } catch (err: unknown) {
     console.error(`Failed loading CachedIcon. Wrong icon name or URL? (${name})`, err);
@@ -57,6 +76,7 @@ watch(
   () => props.name,
   () => {
     loadedSvg.value = '';
+    imgSrc.value = '';
     loadSVG();
   },
 );
