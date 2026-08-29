@@ -2,7 +2,8 @@
 
 Caching icon loader with an emphasis for loading the icons directly from the CDN.
 
-Also supports svg string literals or urls as source.
+Also supports svg string literals, urls to raster images (png, jpg, gif, webp, bmp, ico, avif) or urls to svg as
+source.
 
 ![Demo](demo.gif)
 
@@ -13,6 +14,9 @@ https://www.velis.si/vue-cached-icon/
 ## Features
 
 * Renders sanitised SVG
+* Also renders raster images (png, jpg, jpeg, gif, webp, bmp, ico, avif), recognised by their URL's extension and
+  handed straight to the browser, unsanitised, since there's no markup for DOMPurify to sanitise
+* Rejects a URL that resolves to neither a raster image nor a valid SVG, instead of rendering it half-sanitised
 * Loads from CDN, any local URL, any full URL or SVG literal
   * 'ion-*': loads from ionicons repository
   * 'mdi-*': loads from material design icons repository
@@ -38,6 +42,9 @@ npm install --save vue-cached-icon
 
     <!-- will load from your own server or any other if full URL is provided -->
     <cached-icon name="/images/my-custom-icon.svg"/>
+
+    <!-- raster images are recognised by extension and rendered directly as an <img>, unsanitised -->
+    <cached-icon name="/images/my-custom-icon.png"/>
 
     <!-- will display the provided SVG, but with all processing (sanitizing, applying currentColor) -->
     <cached-icon :name="<svg...mySvgLiteral</svg>"/>
@@ -68,7 +75,8 @@ rules win without `!important`:
 .toolbar .cached-icon-wrapper { font-size: 1.5rem; }
 ```
 
-SVGs that declare their own `width` / `height` keep them.
+SVGs that declare their own `width` / `height` keep them. Raster images are sized the same way through the wrapper,
+with `object-fit: contain` so their aspect ratio is preserved rather than stretched to fill it.
 
 ## Contributing
 
