@@ -1,8 +1,9 @@
 import { shallowMount, flushPromises } from '@vue/test-utils';
-import { vi } from 'vitest'; // the rest are handled by globals: true and @types/jest dependency
+import { vi } from 'vitest'; // the rest are handled by globals: true
 
 import { globalCache } from './cache';
 import CachedIcon from './cached-icon.vue';
+import { registerIconProvider } from './providers';
 
 let requestsCount = 0;
 
@@ -26,6 +27,15 @@ vi.mock('axios', () => ({
 }));
 
 describe('CachedIcon', () => {
+  let consoleError: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    consoleError.mockRestore();
+  });
+
   it("renders for icon and doesn't render when name is null", async () => {
     globalCache.clear();
     const icon1 = shallowMount(CachedIcon, { propsData: { name: 'accessibility-outline' } });
@@ -38,7 +48,6 @@ describe('CachedIcon', () => {
     globalCache.clear();
     const icon1 = shallowMount(CachedIcon, { propsData: { name: 'ion-accessibility-outline' } });
     await flushPromises();
-    // await icon1.vm.$nextTick();
     expect(icon1.emitted('icon-loaded')).toStrictEqual([['ion-accessibility-outline']]);
     expect(icon1.html()).toContain('svg');
   });
@@ -55,6 +64,7 @@ describe('CachedIcon', () => {
     await flushPromises();
     expect(iconFailed1.html()).toContain('…'); // svg remains with ellipsis
     expect(iconFailed2.html()).toContain('…'); // svg remains with ellipsis
+    expect(consoleError).toHaveBeenCalledTimes(2);
   });
   it('loads two SVGs, but only makes one request', async () => {
     const rc = requestsCount;
@@ -127,6 +137,15 @@ describe('CachedIcon', () => {
     });
     await flushPromises();
     expect(icon1.html()).toContain('puscica');
+    expect(icon1.html()).not.toContain('evil'); // external references are stripped, internal ones stay
+    expect(icon1.html()).toContain('href="#peco"');
+  });
+  it('strips the title and paints an icon without its own colours in currentColor', async () => {
+    globalCache.clear();
+    const icon1 = shallowMount(CachedIcon, { propsData: { name: 'ion-warning' } });
+    await flushPromises();
+    expect(icon1.html()).not.toContain('Warning');
+    expect(icon1.html()).toContain('fill="currentColor"');
   });
   it('gives a size to icons that only declare a viewBox, and ships default styling', async () => {
     globalCache.clear();
@@ -171,5 +190,39 @@ describe('CachedIcon', () => {
     await flushPromises();
     expect(icon1.html()).toContain('…'); // stays in loading state, same as any other failure
     expect(icon1.html()).not.toContain('img');
+    expect(consoleError).toHaveBeenCalledTimes(1);
+  });
+  it('rejects a response that is not a valid SVG for concurrent and later loads of the same icon', async () => {
+    const rc = requestsCount;
+    globalCache.clear();
+    const icon1 = shallowMount(CachedIcon, { propsData: { name: '/images/not-really-svg' } });
+    const icon2 = shallowMount(CachedIcon, { propsData: { name: '/images/not-really-svg' } });
+    await flushPromises();
+    const icon3 = shallowMount(CachedIcon, { propsData: { name: '/images/not-really-svg' } });
+    await flushPromises();
+    for (const icon of [icon1, icon2, icon3]) {
+      expect(icon.html()).toContain('…');
+      expect(icon.html()).not.toContain('PNG');
+    }
+    expect(requestsCount).toEqual(rc + 1);
+    expect(consoleError).toHaveBeenCalledTimes(3);
+  });
+  it('replaces the rendered icon when the name changes', async () => {
+    globalCache.clear();
+    const icon1 = shallowMount(CachedIcon, { propsData: { name: '/images/photo.png' } });
+    await flushPromises();
+    expect(icon1.find('img').exists()).toBe(true);
+    await icon1.setProps({ name: '/test.svg' });
+    await flushPromises();
+    expect(icon1.find('img').exists()).toBe(false);
+    expect(icon1.html()).toContain('kladivo');
+    expect(icon1.emitted('icon-loaded')).toStrictEqual([['/images/photo.png'], ['/test.svg']]);
+  });
+  it('fetches icons from a registered custom provider', async () => {
+    globalCache.clear();
+    registerIconProvider('my', (name) => `/my-icons/${name}/test.svg`);
+    const icon1 = shallowMount(CachedIcon, { propsData: { name: 'my-hammer' } });
+    await flushPromises();
+    expect(icon1.html()).toContain('kladivo');
   });
 });

@@ -1,5 +1,5 @@
 import { renderToString } from '@vue/server-renderer';
-import { vi } from 'vitest'; // the rest are handled by globals: true and @types/jest dependency
+import { vi } from 'vitest'; // the rest are handled by globals: true
 import { createSSRApp, h } from 'vue';
 
 import { globalCache } from './cache';
