@@ -23,6 +23,7 @@ https://www.velis.si/vue-cached-icon/
   * 'fa-*': loads from font-awesome repository
 * Register your own repositories using `registerIconProvider(prefix: string, urlBuilder: (name: string) => string)`
 * Caches loaded icons, there will be only one HTTP request per icon as long as the app is running
+* Retries icons that fail to load for a reason that may pass, see [Failed loads](#failed-loads)
 * Applies currentColor to icons: if colour is not otherwise specified, icons will have same color as HTML text
 * Sizes icons to the surrounding text by default, see [Sizing and styling](#sizing-and-styling)
 * Safe for server-side rendering: icons load in the browser after mount, see [Server-side rendering](#server-side-rendering)
@@ -59,12 +60,32 @@ npm install --save vue-cached-icon
 </script>
 ```
 
-The component emits `icon-loaded` with the icon name once the icon has rendered. An icon that fails to load (network
-error, response that is not an SVG) stays at `…` and logs the error to the console.
+The component emits `icon-loaded` with the icon name once the icon has rendered.
 
-Besides `CachedIcon` and `registerIconProvider` the package exports `resolveProviderUrl(name)`, which returns the URL a
+Besides `CachedIcon`, `registerIconProvider` and `retryFailedIcons` (see [Failed loads](#failed-loads)) the package
+exports `resolveProviderUrl(name)`, which returns the URL a
 name resolves to, `iconProviders`, the registry of providers by prefix, and `augment(svg)`, the sanitisation and
 `currentColor` processing applied to every SVG.
+
+## Failed loads
+
+An icon that fails to load shows `…`, and the failure is logged to the console once per request. All icons with the
+same name share the failure, and the next attempt is again a single request for all of them.
+
+* A network error, HTTP 5xx, 401, 403, 408 and 429 are retried while the icon is displayed: after 2 s, then after a delay
+  doubling up to 60 s, or after the delay the server asks for in `Retry-After`. When the browser comes back online,
+  the retry happens right away. An icon mounted after the retry is due requests it right away as well.
+* Any other HTTP status, such as 404, and a response that is not an SVG are not retried.
+
+Call `retryFailedIcons()` when requests that failed may now succeed, e.g. after the user logs in. It forgets every
+failed load, those not retried included, and the displayed icons load again right away:
+
+```javascript
+import { retryFailedIcons } from 'vue-cached-icon';
+
+await login();
+retryFailedIcons();
+```
 
 ## Sizing and styling
 

@@ -4,6 +4,11 @@
 
 - A response that is not valid SVG is rejected also for icons that load the same name concurrently or later from the
   cache, instead of being sanitised and rendered.
+- Icons that fail with a network error, HTTP 5xx, 401, 403, 408 or 429 are retried while displayed, with a delay
+  doubling from 2 s to 60 s or as `Retry-After` asks, and right away when the browser comes back online. Other
+  failures are not retried.
+- `retryFailedIcons()` loads every failed icon again, e.g. after the user logs in.
+- A failed load is logged once per request instead of once per icon.
 
 ## 3.1.2
 

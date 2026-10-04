@@ -64,7 +64,7 @@ describe('CachedIcon', () => {
     await flushPromises();
     expect(iconFailed1.html()).toContain('…'); // svg remains with ellipsis
     expect(iconFailed2.html()).toContain('…'); // svg remains with ellipsis
-    expect(consoleError).toHaveBeenCalledTimes(2);
+    expect(consoleError).toHaveBeenCalledTimes(1); // logged once per request, not once per icon
   });
   it('loads two SVGs, but only makes one request', async () => {
     const rc = requestsCount;
@@ -205,7 +205,7 @@ describe('CachedIcon', () => {
       expect(icon.html()).not.toContain('PNG');
     }
     expect(requestsCount).toEqual(rc + 1);
-    expect(consoleError).toHaveBeenCalledTimes(3);
+    expect(consoleError).toHaveBeenCalledTimes(1);
   });
   it('replaces the rendered icon when the name changes', async () => {
     globalCache.clear();
