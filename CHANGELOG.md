@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 3.2.0
 
 - A response that is not valid SVG is rejected also for icons that load the same name concurrently or later from the
   cache, instead of being sanitised and rendered.
