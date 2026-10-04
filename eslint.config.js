@@ -6,4 +6,4 @@ config.forEach((conf) => {
   }
 });
 
-export default config;
+export default [{ ignores: ['dist/', 'demo/dist/', 'coverage/'] }, ...config];
