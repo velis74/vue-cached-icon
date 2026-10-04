@@ -25,6 +25,7 @@ https://www.velis.si/vue-cached-icon/
 * Caches loaded icons, there will be only one HTTP request per icon as long as the app is running
 * Applies currentColor to icons: if colour is not otherwise specified, icons will have same color as HTML text
 * Sizes icons to the surrounding text by default, see [Sizing and styling](#sizing-and-styling)
+* Safe for server-side rendering: icons load in the browser after mount, see [Server-side rendering](#server-side-rendering)
 
 ## Installing
 
@@ -77,6 +78,13 @@ rules win without `!important`:
 
 SVGs that declare their own `width` / `height` keep them. Raster images are sized the same way through the wrapper,
 with `object-fit: contain` so their aspect ratio is preserved rather than stretched to fill it.
+
+## Server-side rendering
+
+During server-side rendering (Nuxt, VitePress, vite-ssg …) the component renders an empty
+`<span class="cached-icon-wrapper">`: it neither fetches nor sanitises anything on the server. The icon loads once the
+component is mounted in the browser, so the server-rendered markup always matches the first client render and
+hydrates without mismatches. Icons are therefore not part of the static HTML.
 
 ## Contributing
 
