@@ -5,7 +5,7 @@
 
 <script setup lang="ts">
 import axios from 'axios';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 import './inject-styles'; // installs the default icon styling, once per module
 import { globalCache, IconDefOrPromise, IconGetResponse, ResolvedIconGetResponse } from './cache';
@@ -81,5 +81,7 @@ watch(
   },
 );
 
-loadSVG();
+// Loading starts on mount, which never happens during server-side rendering: the server renders an empty icon, the
+// browser loads it. A server's DOM shim has no DOMPurify support, so sanitising there would fail.
+onMounted(loadSVG);
 </script>
