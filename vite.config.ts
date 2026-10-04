@@ -49,6 +49,6 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     include: ['./src/**/*.spec.*'],
-    coverage: { provider: 'v8', exclude: ['dist', 'vite.config.ts', 'demo/**/*'] },
+    coverage: { provider: 'v8', include: ['src/**'], exclude: ['src/**/*.spec.*', 'src/index.ts'] },
   },
 });

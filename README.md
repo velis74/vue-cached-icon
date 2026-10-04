@@ -48,16 +48,23 @@ npm install --save vue-cached-icon
     <cached-icon name="/images/my-custom-icon.png"/>
 
     <!-- will display the provided SVG, but with all processing (sanitizing, applying currentColor) -->
-    <cached-icon :name="<svg...mySvgLiteral</svg>"/>
+    <cached-icon :name="mySvgLiteral"/>
   </div>
 </template>
 ```
 
-```javascript
+```vue
 <script setup>
   import { CachedIcon } from 'vue-cached-icon';
 </script>
 ```
+
+The component emits `icon-loaded` with the icon name once the icon has rendered. An icon that fails to load (network
+error, response that is not an SVG) stays at `…` and logs the error to the console.
+
+Besides `CachedIcon` and `registerIconProvider` the package exports `resolveProviderUrl(name)`, which returns the URL a
+name resolves to, `iconProviders`, the registry of providers by prefix, and `augment(svg)`, the sanitisation and
+`currentColor` processing applied to every SVG.
 
 ## Sizing and styling
 

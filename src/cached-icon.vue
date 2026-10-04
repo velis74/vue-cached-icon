@@ -1,14 +1,14 @@
 <template>
   <span v-if="imgSrc" class="cached-icon-wrapper"><img :src="imgSrc" /></span>
-  <span v-else-if="loadedSvg" :key="loadedSvgKey" class="cached-icon-wrapper" v-html="loadedSvg" />
+  <span v-else-if="loadedSvg" :key="loadedSvg" class="cached-icon-wrapper" v-html="loadedSvg" />
 </template>
 
 <script setup lang="ts">
 import axios from 'axios';
-import { computed, onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 
 import './inject-styles'; // installs the default icon styling, once per module
-import { globalCache, IconDefOrPromise, IconGetResponse, ResolvedIconGetResponse } from './cache';
+import { globalCache, IconDefOrPromise, ResolvedIconGetResponse } from './cache';
 import { resolveProviderUrl } from './providers';
 import { augment } from './svg-augment';
 
@@ -19,11 +19,8 @@ const RASTER_EXTENSION_RE = /\.(png|jpe?g|gif|webp|bmp|ico|avif)(?:[?#].*)?$/i;
 const props = defineProps<{ name?: string }>();
 const emit = defineEmits<{ (e: 'icon-loaded', name: string): void }>();
 
-const loadedSvg = ref('' as IconDefOrPromise);
+const loadedSvg = ref('');
 const imgSrc = ref('');
-const loadedSvgKey = computed(() =>
-  (loadedSvg.value as IconGetResponse)?.then ? 'loading' : (loadedSvg.value as string),
-);
 
 const hasCache = () => globalCache.check(props.name as string);
 const getCache = async () => globalCache.get(props.name as string);
@@ -39,6 +36,15 @@ const setLoadedImg = (url: string) => {
   imgSrc.value = url;
   emit('icon-loaded', props.name as string);
 };
+// Validation is part of the cached promise: a response that is not an SVG rejects for every icon awaiting it, so none
+// of them sanitises and renders it.
+const fetchSVG = async (url: string): Promise<ResolvedIconGetResponse> => {
+  const { data } = await axios.get(url);
+  if (typeof data !== 'string' || !/<svg[\s>]/i.test(data)) {
+    throw new Error(`Response from "${url}" is not a valid SVG`);
+  }
+  return { data };
+};
 const loadSVG = async () => {
   const name = props.name;
 
@@ -53,18 +59,14 @@ const loadSVG = async () => {
       // icon is a svg image string literal
       setLoadedSVG(name);
     } else {
-      // if icon name contains a '/' character, we assume it's a network resource, otherwise an ion icon
+      // a registered provider prefix (ion-, mdi-, fa-, ...) resolves to its URL, any other name is used as a URL
       const url = resolveProviderUrl(name);
       if (RASTER_EXTENSION_RE.test(url)) {
         setLoadedImg(url);
       } else {
-        // first we set cache to axios promise
-        const res1 = (await setCache(axios.get(url))) as ResolvedIconGetResponse;
-        const data = res1.data;
-        if (typeof data !== 'string' || !/<svg[\s>]/i.test(data)) {
-          throw new Error(`Response from "${url}" is not a valid SVG`);
-        }
-        setLoadedSVG(setCache(augment(data)) as string); // then to sanitized svg
+        // first we set cache to the validating fetch promise, so that concurrent loads of this icon share its outcome
+        const res1 = (await setCache(fetchSVG(url))) as ResolvedIconGetResponse;
+        setLoadedSVG(setCache(augment(res1.data)) as string); // then to sanitized svg
       }
     }
   } catch (err: unknown) {
