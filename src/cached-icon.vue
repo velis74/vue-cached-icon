@@ -1,11 +1,11 @@
 <template>
-  <span v-if="imgSrc" class="cached-icon-wrapper"><img :src="imgSrc" /></span>
-  <span v-else-if="loadedSvg" :key="loadedSvg" class="cached-icon-wrapper" v-html="loadedSvg" />
+  <span v-if="imgSrc" class="cached-icon-wrapper" v-bind="a11y"><img :src="imgSrc" alt="" /></span>
+  <span v-else-if="loadedSvg" :key="loadedSvg" class="cached-icon-wrapper" v-bind="a11y" v-html="loadedSvg" />
 </template>
 
 <script setup lang="ts">
 import axios from 'axios';
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, useAttrs, watch } from 'vue';
 
 import './inject-styles'; // installs the default icon styling, once per module
 import { globalCache, IconDefOrPromise, ResolvedIconGetResponse } from './cache';
@@ -19,6 +19,12 @@ const RASTER_EXTENSION_RE = /\.(png|jpe?g|gif|webp|bmp|ico|avif)(?:[?#].*)?$/i;
 
 const props = defineProps<{ name?: string }>();
 const emit = defineEmits<{ (e: 'icon-loaded', name: string): void }>();
+
+const attrs = useAttrs();
+// an icon named by aria-label / aria-labelledby is an image; any other icon is decorative and hidden
+const a11y = computed(() =>
+  attrs['aria-label'] || attrs['aria-labelledby'] ? { role: 'img' } : { 'aria-hidden': true },
+);
 
 const loadedSvg = ref('');
 const imgSrc = ref('');

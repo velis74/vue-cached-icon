@@ -175,14 +175,37 @@ describe('CachedIcon', () => {
     globalCache.clear();
     const icon1 = shallowMount(CachedIcon, { propsData: { name: '/images/photo.png' } });
     await flushPromises();
-    expect(icon1.html()).toContain('<img src="/images/photo.png">');
+    expect(icon1.html()).toContain('<img src="/images/photo.png" alt="">');
     expect(requestsCount).toEqual(rc); // no HTTP request made, the img tag lets the browser handle it
+  });
+  it('hides an icon without an accessible name from assistive technology', async () => {
+    globalCache.clear();
+    const svg = shallowMount(CachedIcon, { propsData: { name: '/test.svg' } });
+    const img = shallowMount(CachedIcon, { propsData: { name: '/images/photo.png' } });
+    await flushPromises();
+    [svg, img].forEach((icon) => {
+      expect(icon.attributes('aria-hidden')).toBe('true');
+      expect(icon.attributes('role')).toBeUndefined();
+    });
+    expect(img.find('img').attributes('alt')).toBe('');
+  });
+  it('makes an icon named by aria-label or aria-labelledby an image', async () => {
+    globalCache.clear();
+    const labelled = shallowMount(CachedIcon, { propsData: { name: '/test.svg' }, attrs: { 'aria-label': 'Warning' } });
+    const byId = shallowMount(CachedIcon, {
+      propsData: { name: '/images/photo.png' },
+      attrs: { 'aria-labelledby': 'caption' },
+    });
+    await flushPromises();
+    expect(labelled.attributes()).toMatchObject({ role: 'img', 'aria-label': 'Warning' });
+    expect(byId.attributes()).toMatchObject({ role: 'img', 'aria-labelledby': 'caption' });
+    [labelled, byId].forEach((icon) => expect(icon.attributes('aria-hidden')).toBeUndefined());
   });
   it('recognises raster extensions regardless of query string and case', async () => {
     globalCache.clear();
     const icon1 = shallowMount(CachedIcon, { propsData: { name: '/images/photo.JPEG?v=2' } });
     await flushPromises();
-    expect(icon1.html()).toContain('<img src="/images/photo.JPEG?v=2">');
+    expect(icon1.html()).toContain('<img src="/images/photo.JPEG?v=2" alt="">');
   });
   it('rejects a response that is not a valid SVG instead of sanitizing it blindly', async () => {
     globalCache.clear();
