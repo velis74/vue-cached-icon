@@ -29,7 +29,7 @@ export default defineConfig({
       afterBuild: () => {
         const dist = resolve(__dirname, 'dist');
         const paths = readdirSync(dist, { recursive: true, encoding: 'utf-8' })
-          .filter((file) => file.endsWith('.d.ts'))
+          .filter((file) => /\.d\.[cm]?ts$/.test(file))
           .flatMap((file) => {
             const { importedFiles, referencedFiles } = ts.preProcessFile(readFileSync(resolve(dist, file), 'utf-8'));
             return [...importedFiles, ...referencedFiles].map((ref) => ref.fileName);
