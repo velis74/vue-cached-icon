@@ -26,6 +26,7 @@ https://www.velis.si/vue-cached-icon/
 * Retries icons that fail to load for a reason that may pass, see [Failed loads](#failed-loads)
 * Applies currentColor to icons: if colour is not otherwise specified, icons will have same color as HTML text
 * Sizes icons to the surrounding text by default, see [Sizing and styling](#sizing-and-styling)
+* Hidden from assistive technology unless named with `aria-label`, see [Accessibility](#accessibility)
 * Safe for server-side rendering: icons load in the browser after mount, see [Server-side rendering](#server-side-rendering)
 
 ## Installing
@@ -66,6 +67,19 @@ Besides `CachedIcon`, `registerIconProvider` and `retryFailedIcons` (see [Failed
 exports `resolveProviderUrl(name)`, which returns the URL a
 name resolves to, `iconProviders`, the registry of providers by prefix, and `augment(svg)`, the sanitisation and
 `currentColor` processing applied to every SVG.
+
+## Accessibility
+
+An icon is decorative by default: its wrapper carries `aria-hidden="true"`, so assistive technology skips it and the
+text next to it names the control. An icon that carries meaning on its own gets an accessible name through
+`aria-label` or `aria-labelledby`; the wrapper is then `role="img"` with that name:
+
+```html
+<button><cached-icon name="ion-trash" /> Delete</button>
+<cached-icon name="ion-warning" aria-label="Warning" />
+```
+
+The SVG's own `<title>` is removed, and a raster image has an empty `alt`: the name comes only from the wrapper.
 
 ## Failed loads
 

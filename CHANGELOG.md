@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.2.1
+
+- An icon is hidden from assistive technology (`aria-hidden="true"` on the wrapper) unless it has an `aria-label` or
+  `aria-labelledby`; then the wrapper is `role="img"`. A raster image has an empty `alt`, so its URL is not read
+  out.
+
 ## 3.2.0
 
 - A response that is not valid SVG is rejected also for icons that load the same name concurrently or later from the
