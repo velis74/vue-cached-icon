@@ -16,18 +16,5 @@ export default defineConfig({
       enforce: 'post',
     },
   ],
-  server: {
-    port: 8080,
-    proxy: {
-      '.*': {
-        target: 'http://localhost:8000',
-        secure: true,
-      },
-      '/api/svg': {
-        target: 'https://www.velis.si',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/svg/, '/assets'),
-      },
-    },
-  },
+  server: { port: 8080 },
 });

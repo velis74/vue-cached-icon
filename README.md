@@ -7,9 +7,7 @@ source.
 
 ![Demo](demo.gif)
 
-## Demo
-
-https://www.velis.si/vue-cached-icon/
+[Live demo](https://docs.velis.si/vue-cached-icon/demo/)
 
 ## Features
 
