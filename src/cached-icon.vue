@@ -132,7 +132,6 @@ watch(
 );
 onBeforeUnmount(cancelRetry);
 
-// Loading starts on mount, which never happens during server-side rendering: the server renders an empty icon, the
-// browser loads it. A server's DOM shim has no DOMPurify support, so sanitising there would fail.
+// loading starts on mount, which does not run during server-side rendering
 onMounted(() => loadSVG());
 </script>
