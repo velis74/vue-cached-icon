@@ -9,7 +9,7 @@ const { get } = vi.hoisted(() => ({ get: vi.fn(async () => ({ data: '<svg id="kl
 vi.mock('axios', () => ({ default: { get } }));
 
 describe('CachedIcon server-side rendering', () => {
-  it('neither fetches nor sanitizes an icon', async () => {
+  it('neither fetches nor sanitises an icon', async () => {
     const app = createSSRApp({
       render: () => [h(CachedIcon, { name: 'ion-warning' }), h(CachedIcon, { name: '<svg id="literal"></svg>' })],
     });

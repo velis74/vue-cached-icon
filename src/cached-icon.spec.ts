@@ -179,7 +179,7 @@ describe('CachedIcon', () => {
     await flushPromises();
     expect(icon1.html()).toContain('kladivo');
   });
-  it('renders a raster image directly, without fetching or sanitizing it', async () => {
+  it('renders a raster image directly, without fetching or sanitising it', async () => {
     const rc = requestsCount;
     globalCache.clear();
     const icon1 = shallowMount(CachedIcon, { propsData: { name: '/images/photo.png' } });
@@ -216,7 +216,7 @@ describe('CachedIcon', () => {
     await flushPromises();
     expect(icon1.html()).toContain('<img src="/images/photo.JPEG?v=2" alt="">');
   });
-  it('rejects a response that is not a valid SVG instead of sanitizing it blindly', async () => {
+  it('rejects a response that is not a valid SVG instead of sanitising it blindly', async () => {
     globalCache.clear();
     const icon1 = shallowMount(CachedIcon, { propsData: { name: '/images/not-really-svg' } });
     await flushPromises();
