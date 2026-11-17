@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "npm run dev --workspace=demo",
+    "demo:build": "npm run build --workspace=demo --",
     "build": "vite build && vue-tsc --noEmit",
     "test": "vitest run --coverage",
     "lint": "eslint ."
