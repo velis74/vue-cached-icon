@@ -102,16 +102,16 @@ onMounted(() => {
 
 <style>
 .cached-icon-wrapper {
-  display: inline-block;
-  height: 1.5em;
+  font-size: 1.5em;
 }
 
-.cached-icon-wrapper > svg {
-  display: inline-block;
-  height: 1.5em;
+.cached-icon-wrapper.bigger {
+  width: auto;
+  height: 3em;
+  font-size: inherit;
 }
 
 .cached-icon-wrapper.bigger > svg {
-  height: 5em;
+  width: auto;
 }
 </style>
