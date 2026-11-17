@@ -26,7 +26,7 @@ export function augment(svg: string): string {
 
   // <title> elements are part of an element's text in selenium, so they would end up in the text of e.g. a button
   // containing the icon
-  let result = svg.replace(/<title\b[^>]*>[\s\S]*?<\/title>/gi, '');
+  let result = svg.replace(/<title\b[^>]*>[\s\S]*?<\/title\s*>/gi, '');
   if (!result.includes('currentColor')) {
     // a default fill only: colours the svg defines on its own elements, e.g. fill="black", still take precedence
     result = result.replace(/(<svg)(\s)(.*)/i, '$1 fill="currentColor" $3');
