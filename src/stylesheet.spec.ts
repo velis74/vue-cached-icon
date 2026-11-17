@@ -22,10 +22,19 @@ describe('CachedIcon package stylesheet', () => {
   };
 
   beforeAll(async () => {
+    const appStyle = document.createElement('style');
+    appStyle.id = 'app-style';
+    appStyle.textContent = '.app { color: red; }';
+    document.head.appendChild(appStyle);
     ({ CachedIcon } = await import('./index'));
     mount(CachedIcon, { props: { name: SQUARE } }).unmount();
   });
   afterEach(() => mounted.splice(0).forEach((icon) => icon.unmount()));
+
+  it('is the first element of head, before the styles already there', () => {
+    expect(document.head.firstElementChild).toBe(packageSheet());
+    expect(document.head.querySelector('#app-style')).not.toBeNull();
+  });
 
   it('keeps the specificity of ".cached-icon-wrapper>svg" for the default SVG size', () => {
     const selectors = packageRules().map((rule) => normalise(rule.selectorText));

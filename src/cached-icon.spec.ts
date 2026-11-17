@@ -192,6 +192,21 @@ describe('CachedIcon', () => {
     expect(svg.find('title').exists()).toBe(false);
     expect(icon1.html()).not.toMatch(/Labelled|Spanning|lines/);
   });
+  it.each([
+    ['its own colours', '<svg viewBox="0 0 10 10"><path id="p1" fill="#c00" d="M0 0h5v5z"/></svg>', '#c00'],
+    [
+      'currentColor',
+      '<svg viewBox="0 0 10 10"><path id="p1" fill="currentColor" d="M0 0h5v5z"/></svg>',
+      'currentColor',
+    ],
+  ])('keeps an SVG painted with %s as it is', async (_, name, fill) => {
+    globalCache.clear();
+    const icon1 = shallowMount(CachedIcon, { propsData: { name } });
+    await flushPromises();
+    const svg = icon1.find('svg');
+    expect(svg.attributes('fill')).toBeUndefined();
+    expect(svg.find('#p1').attributes('fill')).toBe(fill);
+  });
   it('gives a size to icons that only declare a viewBox, and ships default styling', async () => {
     globalCache.clear();
     const icon1 = shallowMount(CachedIcon, { propsData: { name: 'ion-warning' } });
@@ -222,6 +237,16 @@ describe('CachedIcon', () => {
     await flushPromises();
     expect(icon1.html()).toContain('<img src="/images/photo.png" alt="">');
     expect(requestsCount).toEqual(rc); // no HTTP request made, the img tag lets the browser handle it
+  });
+  it('renders a raster URL from a custom provider as an image without a request', async () => {
+    const rc = requestsCount;
+    globalCache.clear();
+    registerIconProvider('img', (name) => `/x/${name}.png`);
+    const icon1 = shallowMount(CachedIcon, { propsData: { name: 'img-photo' } });
+    await flushPromises();
+    expect(icon1.find('img').attributes()).toMatchObject({ src: '/x/photo.png', alt: '' });
+    expect(icon1.find('svg').exists()).toBe(false);
+    expect(requestsCount).toEqual(rc);
   });
   it('hides an icon without an accessible name from assistive technology', async () => {
     globalCache.clear();

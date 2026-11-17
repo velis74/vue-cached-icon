@@ -117,6 +117,20 @@ describe('CachedIcon failed loads', () => {
     expect(icon.html()).toContain('kladivo');
   });
 
+  it('requests a permanently failed icon again for an icon mounted after retryFailedIcons', async () => {
+    get.mockRejectedValueOnce(httpError(404)).mockResolvedValue(SVG);
+    mountIcon('/icon.svg').unmount();
+    await flushPromises();
+    expect(get).toHaveBeenCalledTimes(1);
+    retryFailedIcons();
+    await flushPromises();
+    expect(get).toHaveBeenCalledTimes(1);
+    const later = mountIcon('/icon.svg');
+    await flushPromises();
+    expect(get).toHaveBeenCalledTimes(2);
+    expect(later.html()).toContain('kladivo');
+  });
+
   it('retries right away when the browser comes back online', async () => {
     get.mockRejectedValueOnce(new Error('Network Error')).mockResolvedValue(SVG);
     const icon = mountIcon('/icon.svg');
