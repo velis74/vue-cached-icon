@@ -29,19 +29,17 @@ const a11y = computed(() =>
 const loadedSvg = ref('');
 const imgSrc = ref('');
 
-const hasCache = () => globalCache.check(props.name as string);
-const getCache = async () => globalCache.get(props.name as string);
-const setCache = (value: IconDefOrPromise) => {
-  globalCache.set(props.name as string, value);
+const setCache = (name: string, value: IconDefOrPromise) => {
+  globalCache.set(name, value);
   return value;
 };
-const setLoadedSVG = (svg: string) => {
+const setLoadedSVG = (name: string, svg: string) => {
   loadedSvg.value = augment(svg);
-  emit('icon-loaded', props.name as string);
+  emit('icon-loaded', name);
 };
-const setLoadedImg = (url: string) => {
+const setLoadedImg = (name: string, url: string) => {
   imgSrc.value = url;
-  emit('icon-loaded', props.name as string);
+  emit('icon-loaded', name);
 };
 // Validation is part of the cached promise: a response that is not an SVG rejects for every icon awaiting it, so none
 // of them sanitises and renders it. A failure replaces the promise in the cache and is logged once, by the icon that
@@ -91,21 +89,25 @@ const loadSVG = async (attempt = 1) => {
   imgSrc.value = '';
   loadedSvg.value = '&hellip;'; // ellipsis while we're loading
   try {
-    if (hasCache()) {
+    if (globalCache.check(name)) {
       // icon is already in cache
-      setLoadedSVG(await getCache());
+      const svg = await globalCache.get(name);
+      if (name !== props.name) return; // the icon shows another name by now
+      setLoadedSVG(name, svg as string);
     } else if (name.toLowerCase().includes('<svg')) {
       // icon is a svg image string literal
-      setLoadedSVG(name);
+      setLoadedSVG(name, name);
     } else {
       // a registered provider prefix (ion-, mdi-, fa-, ...) resolves to its URL, any other name is used as a URL
       const url = resolveProviderUrl(name);
       if (RASTER_EXTENSION_RE.test(url)) {
-        setLoadedImg(url);
+        setLoadedImg(name, url);
       } else {
         // first we set cache to the validating fetch promise, so that concurrent loads of this icon share its outcome
-        const res1 = (await setCache(fetchSVG(name, url, attempt))) as ResolvedIconGetResponse;
-        setLoadedSVG(setCache(augment(res1.data)) as string); // then to sanitized svg
+        const res1 = (await setCache(name, fetchSVG(name, url, attempt))) as ResolvedIconGetResponse;
+        setCache(name, augment(res1.data)); // then to sanitized svg, also when the icon shows another name by now
+        if (name !== props.name) return;
+        setLoadedSVG(name, res1.data);
       }
     }
   } catch (err: unknown) {
