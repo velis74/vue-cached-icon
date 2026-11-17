@@ -132,7 +132,7 @@ An SVG keeps its own size with the class `cached-icon-own-size` on the component
 ```
 
 The SVG then renders at its `width` / `height` attributes and the wrapper takes the size of the SVG. A dimension the SVG
-does not declare stays `1em`.
+does not declare stays `1em`. A raster image with this class renders at its natural size.
 
 ## Server-side rendering
 
