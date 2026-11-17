@@ -18,7 +18,12 @@ describe('CachedIcon server-side rendering', () => {
     ['an SVG literal', '<svg id="literal"></svg>'],
     ['a raster image', '/images/photo.png'],
   ])('renders an empty decorative wrapper for %s and neither fetches nor sanitises it', async (_, name) => {
-    expect(await render({ name })).toBe('<span class="cached-icon-wrapper" aria-hidden="true"></span>');
+    const span = new DOMParser().parseFromString(await render({ name }), 'text/html').body.firstElementChild!;
+    expect(span.tagName).toBe('SPAN');
+    expect(span.getAttributeNames().sort()).toEqual(['aria-hidden', 'class']);
+    expect(span.className).toBe('cached-icon-wrapper');
+    expect(span.getAttribute('aria-hidden')).toBe('true');
+    expect(span.childNodes.length).toBe(0);
     expect(get).not.toHaveBeenCalled();
   });
 

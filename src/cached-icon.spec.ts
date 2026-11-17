@@ -193,18 +193,24 @@ describe('CachedIcon', () => {
     expect(icon1.html()).not.toMatch(/Labelled|Spanning|lines/);
   });
   it.each([
-    ['its own colours', '<svg viewBox="0 0 10 10"><path id="p1" fill="#c00" d="M0 0h5v5z"/></svg>', '#c00'],
+    [
+      'its own colours',
+      '<svg viewBox="0 0 10 10"><path id="p1" fill="#c00" d="M0 0h5v5z"/></svg>',
+      '#c00',
+      'currentColor',
+    ],
     [
       'currentColor',
       '<svg viewBox="0 0 10 10"><path id="p1" fill="currentColor" d="M0 0h5v5z"/></svg>',
       'currentColor',
+      undefined,
     ],
-  ])('keeps an SVG painted with %s as it is', async (_, name, fill) => {
+  ])('keeps the colours of an SVG painted with %s', async (_, name, fill, rootFill) => {
     globalCache.clear();
     const icon1 = shallowMount(CachedIcon, { propsData: { name } });
     await flushPromises();
     const svg = icon1.find('svg');
-    expect(svg.attributes('fill')).toBeUndefined();
+    expect(svg.attributes('fill')).toBe(rootFill);
     expect(svg.find('#p1').attributes('fill')).toBe(fill);
   });
   it('gives a size to icons that only declare a viewBox, and ships default styling', async () => {
