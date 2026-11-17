@@ -6,11 +6,13 @@ import CachedIcon from './cached-icon.vue';
 import { registerIconProvider } from './providers';
 
 let requestsCount = 0;
+const { held } = vi.hoisted(() => ({ held: new Map<string, (response: { data: string }) => void>() }));
 
 vi.mock('axios', () => ({
   default: {
     get: async (url: string) => {
       requestsCount += 1;
+      if (url.includes('held')) return new Promise((resolve) => held.set(url, resolve));
       if (url.includes('failure')) throw new Error('bad url');
       if (url.includes('test.svg')) return { data: '<svg id="kladivo"></svg>' };
       if (url.includes('not-really-svg')) return { data: '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR' };
@@ -249,6 +251,33 @@ describe('CachedIcon', () => {
     expect(icon1.find('img').exists()).toBe(false);
     expect(icon1.html()).toContain('kladivo');
     expect(icon1.emitted('icon-loaded')).toStrictEqual([['/images/photo.png'], ['/test.svg']]);
+  });
+  it('keeps the new icon when the previous icon finishes loading after the name changed', async () => {
+    globalCache.clear();
+    const loadedB = shallowMount(CachedIcon, { propsData: { name: '/test.svg' } });
+    await flushPromises();
+    expect(loadedB.html()).toContain('kladivo');
+    const icon1 = shallowMount(CachedIcon, { propsData: { name: '/held-a.svg' } });
+    await flushPromises();
+    expect(held.has('/held-a.svg')).toBe(true);
+    await icon1.setProps({ name: '/test.svg' });
+    await flushPromises();
+    expect(icon1.html()).toContain('kladivo');
+    held.get('/held-a.svg')!({ data: '<svg id="icon-a"></svg>' });
+    await flushPromises();
+    expect(icon1.html()).toContain('kladivo');
+    expect(icon1.html()).not.toContain('icon-a');
+    expect(icon1.emitted('icon-loaded')).toStrictEqual([['/test.svg']]);
+
+    const rc = requestsCount;
+    const laterA = shallowMount(CachedIcon, { propsData: { name: '/held-a.svg' } });
+    const laterB = shallowMount(CachedIcon, { propsData: { name: '/test.svg' } });
+    await flushPromises();
+    expect(laterA.html()).toContain('icon-a');
+    expect(laterA.html()).not.toContain('kladivo');
+    expect(laterB.html()).toContain('kladivo');
+    expect(laterB.html()).not.toContain('icon-a');
+    expect(requestsCount).toEqual(rc);
   });
   it('fetches icons from a registered custom provider', async () => {
     globalCache.clear();
