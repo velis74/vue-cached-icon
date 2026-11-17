@@ -28,8 +28,7 @@
       <cached-icon :name="icon" />
       Icon should be green here
     </div>
-    <p>&hellip;</p>
-    <p>
+    <p style="margin-top: 2em">
       Also note how - since all three icons above are the same - there's only one request to the icon repository for
       all.
     </p>
