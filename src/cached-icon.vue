@@ -65,6 +65,7 @@ const fetchSVG = async (name: string, url: string, attempt: number): Promise<Res
 };
 
 let unmounted = false;
+let latestLoad = 0; // incremented by every loadSVG call; only the latest call applies its outcome
 let retryTimer: ReturnType<typeof setTimeout> | undefined;
 let unregisterFailedIcon: (() => void) | undefined;
 const cancelRetry = () => {
@@ -89,6 +90,7 @@ const scheduleRetry = (name: string, failure: IconLoadError) => {
  */
 const loadSVG = async (attempt = 1) => {
   const name = props.name;
+  const load = ++latestLoad;
 
   cancelRetry();
   if (!name) return; // Name is not defined, so don't render anything
@@ -98,7 +100,7 @@ const loadSVG = async (attempt = 1) => {
     if (globalCache.check(name)) {
       // icon is already in cache, as augmented markup or a promise of it
       const svg = await globalCache.get(name);
-      if (name !== props.name) return; // the icon shows another name by now
+      if (load !== latestLoad) return; // a later load has started
       setLoadedSVG(name, svg as string);
     } else if (name.toLowerCase().includes('<svg')) {
       // icon is a svg image string literal
@@ -112,14 +114,14 @@ const loadSVG = async (attempt = 1) => {
         // first we set cache to the fetch promise, so that concurrent loads of this icon share its outcome
         const { data } = (await setCache(name, fetchSVG(name, url, attempt))) as ResolvedIconGetResponse;
         setCache(name, data); // then to its augmented markup, also when the icon shows another name by now
-        if (name !== props.name) return;
+        if (load !== latestLoad) return;
         setLoadedSVG(name, data);
       }
     }
   } catch (err: unknown) {
     if (!(err instanceof IconLoadError)) {
       console.error(`Failed loading CachedIcon. Wrong icon name or URL? (${name})`, err);
-    } else if (!unmounted && name === props.name) {
+    } else if (!unmounted && load === latestLoad) {
       scheduleRetry(name, err); // the icon still shows this name and keeps showing the ellipsis until a retry succeeds
     }
   }

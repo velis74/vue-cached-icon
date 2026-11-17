@@ -344,6 +344,19 @@ describe('CachedIcon', () => {
     expect(laterB.html()).not.toContain('icon-a');
     expect(requestsCount).toEqual(rc);
   });
+  it('emits icon-loaded once when the name changes away and back while the icon is loading', async () => {
+    globalCache.clear();
+    const icon1 = shallowMount(CachedIcon, { propsData: { name: '/held-c.svg' } });
+    await flushPromises();
+    await icon1.setProps({ name: '/test.svg' });
+    await flushPromises();
+    await icon1.setProps({ name: '/held-c.svg' });
+    await flushPromises();
+    held.get('/held-c.svg')!({ data: '<svg id="icon-c"></svg>' });
+    await flushPromises();
+    expect(icon1.html()).toContain('icon-c');
+    expect(icon1.emitted('icon-loaded')).toStrictEqual([['/test.svg'], ['/held-c.svg']]);
+  });
   it('fetches icons from a registered custom provider', async () => {
     globalCache.clear();
     registerIconProvider('my', (name) => `/my-icons/${name}/test.svg`);

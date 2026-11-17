@@ -117,6 +117,28 @@ describe('CachedIcon failed loads', () => {
     expect(icon.html()).toContain('kladivo');
   });
 
+  it('makes no request for an icon unmounted after its name changed away and back during a failing load', async () => {
+    let fail: (err: Error) => void = () => {};
+    get.mockImplementation((url: string) =>
+      url === '/flaky.svg' ? new Promise((_, reject) => (fail = reject)) : Promise.resolve(SVG),
+    );
+    const icon = mountIcon('/flaky.svg');
+    await flushPromises();
+    await icon.setProps({ name: '/other.svg' });
+    await flushPromises();
+    await icon.setProps({ name: '/flaky.svg' });
+    await flushPromises();
+    fail(new Error('Network Error'));
+    await flushPromises();
+    icon.unmount();
+    const requests = get.mock.calls.length;
+    vi.advanceTimersByTime(120000);
+    retryFailedIcons();
+    window.dispatchEvent(new Event('online'));
+    await flushPromises();
+    expect(get).toHaveBeenCalledTimes(requests);
+  });
+
   it('requests a permanently failed icon again for an icon mounted after retryFailedIcons', async () => {
     get.mockRejectedValueOnce(httpError(404)).mockResolvedValue(SVG);
     mountIcon('/icon.svg').unmount();
