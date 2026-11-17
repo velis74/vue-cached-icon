@@ -51,12 +51,12 @@ export default defineConfig({
       entry: resolve(__dirname, 'src/index.ts'),
       formats: ['umd', 'es'],
       fileName: 'vue-cached-icon',
-      name: 'vue-cached-icon',
+      name: 'VueCachedIcon',
     },
     rollupOptions: {
       external: ['vue', 'axios', 'isomorphic-dompurify'],
       output: {
-        globals: (id: string) => id, // all external modules are currently not aliased to anything but their own names
+        globals: { vue: 'Vue', axios: 'axios', 'isomorphic-dompurify': 'DOMPurify' },
       },
     },
   },
