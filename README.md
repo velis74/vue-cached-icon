@@ -63,9 +63,14 @@ The component emits `icon-loaded` with the icon name when it sets the icon's con
 Vue's next update (`await nextTick()`).
 
 Besides `CachedIcon`, `registerIconProvider` and `retryFailedIcons` (see [Failed loads](#failed-loads)) the package
-exports `resolveProviderUrl(name)`, which returns the URL a
-name resolves to, `iconProviders`, the registry of providers by prefix, and `augment(svg)`, the sanitisation and
-`currentColor` processing applied to every SVG.
+exports `resolveProviderUrl(name)`, which returns the URL a name resolves to, `iconProviders`, the registry of
+providers by prefix, its type `IconProvidersRegistry` (`Record<string, (name: string) => string>`), and `augment(svg)`,
+the sanitisation and `currentColor` processing applied to every SVG.
+
+### Props
+
+* `name?: string`: the icon to show. A provider-prefixed name (`ion-warning`, `mdi-account`, a registered prefix), a
+  URL of an SVG, a URL of a raster image or an SVG literal. An empty or missing `name` renders nothing.
 
 ## Accessibility
 
