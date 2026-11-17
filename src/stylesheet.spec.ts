@@ -74,14 +74,13 @@ describe('CachedIcon package stylesheet', () => {
     expect(window.getComputedStyle(svg).height).not.toBe('100%');
   });
 
-  it(`falls back to 1em in a dimension the SVG does not declare with "${OWN_SIZE}"`, async () => {
+  it(`keeps 1em in a dimension the SVG does not declare with "${OWN_SIZE}"`, async () => {
     const icon = mountIcon(WIDTH_ONLY, { class: OWN_SIZE });
     await flushPromises();
     const svg = icon.find('svg').element;
     expect(svg.getAttribute('width')).toBe('32');
     expect(window.getComputedStyle(svg).width).not.toBe('100%');
-    const height = window.getComputedStyle(svg).height;
-    expect(height).not.toBe('100%');
-    expect(height === '1em' || svg.getAttribute('height') === '1em').toBe(true);
+    expect(window.getComputedStyle(svg).height).not.toBe('100%');
+    expect(svg.getAttribute('height')).toBe('1em');
   });
 });
