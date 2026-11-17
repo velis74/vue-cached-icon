@@ -221,7 +221,7 @@ describe('CachedIcon', () => {
     expect(icon1.html()).toContain('height="1em"');
     expect(document.head.querySelector('style[data-vue-cached-icon]')?.textContent).toContain('.cached-icon-wrapper');
   });
-  it('keeps the size an icon declares for itself', async () => {
+  it('keeps the width / height attributes an SVG declares, without adding 1em', async () => {
     globalCache.clear();
     const icon1 = shallowMount(CachedIcon, {
       propsData: { name: '<svg width="32" height="32" viewBox="0 0 32 32"><path d="M0 0h32v32H0z"/></svg>' },

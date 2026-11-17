@@ -139,7 +139,7 @@ describe('CachedIcon failed loads', () => {
     expect(get).toHaveBeenCalledTimes(requests);
   });
 
-  it('requests a permanently failed icon again for an icon mounted after retryFailedIcons', async () => {
+  it('retries no icon unmounted while it was loading; a later mount requests it again', async () => {
     get.mockRejectedValueOnce(httpError(404)).mockResolvedValue(SVG);
     mountIcon('/icon.svg').unmount();
     await flushPromises();
