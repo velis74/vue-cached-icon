@@ -1,6 +1,7 @@
 <template>
   <span v-if="imgSrc" v-bind="a11y" class="cached-icon-wrapper"><img :src="imgSrc" alt="" /></span>
   <span v-else-if="loadedSvg" v-bind="a11y" :key="loadedSvg" class="cached-icon-wrapper" v-html="loadedSvg" />
+  <span v-else-if="name" v-bind="a11y" class="cached-icon-wrapper" />
 </template>
 
 <script setup lang="ts">
@@ -26,41 +27,45 @@ const a11y = computed(() =>
   attrs['aria-label'] || attrs['aria-labelledby'] ? { role: 'img' } : { 'aria-hidden': true },
 );
 
+// while both are empty, a named icon renders an empty wrapper: on the server and in the first client render
 const loadedSvg = ref('');
 const imgSrc = ref('');
 
-const hasCache = () => globalCache.check(props.name as string);
-const getCache = async () => globalCache.get(props.name as string);
-const setCache = (value: IconDefOrPromise) => {
-  globalCache.set(props.name as string, value);
+const setCache = (name: string, value: IconDefOrPromise) => {
+  globalCache.set(name, value);
   return value;
 };
-const setLoadedSVG = (svg: string) => {
-  loadedSvg.value = augment(svg);
-  emit('icon-loaded', props.name as string);
+/** @param svg augmented markup */
+const setLoadedSVG = (name: string, svg: string) => {
+  loadedSvg.value = svg;
+  emit('icon-loaded', name);
 };
-const setLoadedImg = (url: string) => {
+const setLoadedImg = (name: string, url: string) => {
   imgSrc.value = url;
-  emit('icon-loaded', props.name as string);
+  emit('icon-loaded', name);
 };
-// Validation is part of the cached promise: a response that is not an SVG rejects for every icon awaiting it, so none
-// of them sanitises and renders it. A failure replaces the promise in the cache and is logged once, by the icon that
-// made the request.
+// Validation and augmentation are part of the cached promise: a response that is not an SVG rejects for every icon
+// awaiting it, and a valid one resolves to augmented markup for all of them. A failure replaces the promise in the
+// cache and is logged once, by the icon that made the request.
 const fetchSVG = async (name: string, url: string, attempt: number): Promise<ResolvedIconGetResponse> => {
+  let svg: string;
   try {
     const { data } = await axios.get(url);
     if (typeof data !== 'string' || !/<svg[\s>]/i.test(data)) {
       throw new IconLoadError(`Response from "${url}" is not a valid SVG`, attempt);
     }
-    return { data };
+    svg = data;
   } catch (err: unknown) {
     const failure = toIconLoadError(err, url, attempt);
     globalCache.set(name, failure);
     console.error(`Failed loading CachedIcon. Wrong icon name or URL? (${name})`, failure);
     throw failure;
   }
+  return { data: augment(svg) };
 };
 
+let unmounted = false;
+let latestLoad = 0; // incremented by every loadSVG call; only the latest call applies its outcome
 let retryTimer: ReturnType<typeof setTimeout> | undefined;
 let unregisterFailedIcon: (() => void) | undefined;
 const cancelRetry = () => {
@@ -85,33 +90,38 @@ const scheduleRetry = (name: string, failure: IconLoadError) => {
  */
 const loadSVG = async (attempt = 1) => {
   const name = props.name;
+  const load = ++latestLoad;
 
   cancelRetry();
   if (!name) return; // Name is not defined, so don't render anything
   imgSrc.value = '';
   loadedSvg.value = '&hellip;'; // ellipsis while we're loading
   try {
-    if (hasCache()) {
-      // icon is already in cache
-      setLoadedSVG(await getCache());
+    if (globalCache.check(name)) {
+      // icon is already in cache, as augmented markup or a promise of it
+      const svg = await globalCache.get(name);
+      if (load !== latestLoad) return; // a later load has started
+      setLoadedSVG(name, svg as string);
     } else if (name.toLowerCase().includes('<svg')) {
       // icon is a svg image string literal
-      setLoadedSVG(name);
+      setLoadedSVG(name, augment(name));
     } else {
       // a registered provider prefix (ion-, mdi-, fa-, ...) resolves to its URL, any other name is used as a URL
       const url = resolveProviderUrl(name);
       if (RASTER_EXTENSION_RE.test(url)) {
-        setLoadedImg(url);
+        setLoadedImg(name, url);
       } else {
-        // first we set cache to the validating fetch promise, so that concurrent loads of this icon share its outcome
-        const res1 = (await setCache(fetchSVG(name, url, attempt))) as ResolvedIconGetResponse;
-        setLoadedSVG(setCache(augment(res1.data)) as string); // then to sanitized svg
+        // first we set cache to the fetch promise, so that concurrent loads of this icon share its outcome
+        const { data } = (await setCache(name, fetchSVG(name, url, attempt))) as ResolvedIconGetResponse;
+        setCache(name, data); // then to its augmented markup, also when the icon shows another name by now
+        if (load !== latestLoad) return;
+        setLoadedSVG(name, data);
       }
     }
   } catch (err: unknown) {
     if (!(err instanceof IconLoadError)) {
       console.error(`Failed loading CachedIcon. Wrong icon name or URL? (${name})`, err);
-    } else if (name === props.name) {
+    } else if (!unmounted && load === latestLoad) {
       scheduleRetry(name, err); // the icon still shows this name and keeps showing the ellipsis until a retry succeeds
     }
   }
@@ -125,9 +135,11 @@ watch(
     loadSVG();
   },
 );
-onBeforeUnmount(cancelRetry);
+onBeforeUnmount(() => {
+  unmounted = true;
+  cancelRetry();
+});
 
-// Loading starts on mount, which never happens during server-side rendering: the server renders an empty icon, the
-// browser loads it. A server's DOM shim has no DOMPurify support, so sanitising there would fail.
+// loading starts on mount, which does not run during server-side rendering
 onMounted(() => loadSVG());
 </script>

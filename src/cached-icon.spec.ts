@@ -6,11 +6,13 @@ import CachedIcon from './cached-icon.vue';
 import { registerIconProvider } from './providers';
 
 let requestsCount = 0;
+const { held } = vi.hoisted(() => ({ held: new Map<string, (response: { data: string }) => void>() }));
 
 vi.mock('axios', () => ({
   default: {
     get: async (url: string) => {
       requestsCount += 1;
+      if (url.includes('held')) return new Promise((resolve) => held.set(url, resolve));
       if (url.includes('failure')) throw new Error('bad url');
       if (url.includes('test.svg')) return { data: '<svg id="kladivo"></svg>' };
       if (url.includes('not-really-svg')) return { data: '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR' };
@@ -40,9 +42,18 @@ describe('CachedIcon', () => {
     globalCache.clear();
     const icon1 = shallowMount(CachedIcon, { propsData: { name: 'accessibility-outline' } });
     await flushPromises();
-    expect(icon1.html()).toContain('span');
+    expect(icon1.find('.cached-icon-wrapper').exists()).toBe(true);
     await icon1.setProps({ name: undefined });
-    expect(icon1.html()).toMatch('');
+    expect(icon1.find('.cached-icon-wrapper').exists()).toBe(false);
+    expect(icon1.find('svg').exists()).toBe(false);
+  });
+  it('makes no request when mounted without a name', async () => {
+    const rc = requestsCount;
+    globalCache.clear();
+    const icon1 = shallowMount(CachedIcon);
+    await flushPromises();
+    expect(icon1.find('.cached-icon-wrapper').exists()).toBe(false);
+    expect(requestsCount).toEqual(rc);
   });
   it("emits event when rendered and there's a SVG in the DOM", async () => {
     globalCache.clear();
@@ -147,6 +158,61 @@ describe('CachedIcon', () => {
     expect(icon1.html()).not.toContain('Warning');
     expect(icon1.html()).toContain('fill="currentColor"');
   });
+  it('removes every title and keeps the drawing elements between them', async () => {
+    globalCache.clear();
+    const icon1 = shallowMount(CachedIcon, {
+      propsData: {
+        name:
+          '<svg viewBox="0 0 10 10"><title>First</title><path id="p1" d="M0 0h1v1z"/>' +
+          '<circle id="c1" cx="5" cy="5" r="1"/><title>Second</title><rect id="r1" width="2" height="2"/></svg>',
+      },
+    });
+    await flushPromises();
+    const svg = icon1.find('svg');
+    expect(svg.exists()).toBe(true);
+    expect(['p1', 'c1', 'r1'].map((id) => svg.find(`#${id}`).exists())).toStrictEqual([true, true, true]);
+    expect(svg.find('title').exists()).toBe(false);
+    expect(icon1.html()).not.toContain('First');
+    expect(icon1.html()).not.toContain('Second');
+  });
+  it('removes a title with attributes and a title spanning lines', async () => {
+    globalCache.clear();
+    const icon1 = shallowMount(CachedIcon, {
+      propsData: {
+        name:
+          '<svg viewBox="0 0 10 10"><title id="t1" lang="en">Labelled</title><path id="p1" d="M0 0h1v1z"/>' +
+          '<title\n  lang="en"\n>Spanning\nlines</title\n><path id="p2" d="M1 1h1v1z"/></svg>',
+      },
+    });
+    await flushPromises();
+    const svg = icon1.find('svg');
+    expect(svg.exists()).toBe(true);
+    expect(svg.find('#p1').exists()).toBe(true);
+    expect(svg.find('#p2').exists()).toBe(true);
+    expect(svg.find('title').exists()).toBe(false);
+    expect(icon1.html()).not.toMatch(/Labelled|Spanning|lines/);
+  });
+  it.each([
+    [
+      'its own colours',
+      '<svg viewBox="0 0 10 10"><path id="p1" fill="#c00" d="M0 0h5v5z"/></svg>',
+      '#c00',
+      'currentColor',
+    ],
+    [
+      'currentColor',
+      '<svg viewBox="0 0 10 10"><path id="p1" fill="currentColor" d="M0 0h5v5z"/></svg>',
+      'currentColor',
+      undefined,
+    ],
+  ])('keeps the colours of an SVG painted with %s', async (_, name, fill, rootFill) => {
+    globalCache.clear();
+    const icon1 = shallowMount(CachedIcon, { propsData: { name } });
+    await flushPromises();
+    const svg = icon1.find('svg');
+    expect(svg.attributes('fill')).toBe(rootFill);
+    expect(svg.find('#p1').attributes('fill')).toBe(fill);
+  });
   it('gives a size to icons that only declare a viewBox, and ships default styling', async () => {
     globalCache.clear();
     const icon1 = shallowMount(CachedIcon, { propsData: { name: 'ion-warning' } });
@@ -155,7 +221,7 @@ describe('CachedIcon', () => {
     expect(icon1.html()).toContain('height="1em"');
     expect(document.head.querySelector('style[data-vue-cached-icon]')?.textContent).toContain('.cached-icon-wrapper');
   });
-  it('keeps the size an icon declares for itself', async () => {
+  it('keeps the width / height attributes an SVG declares, without adding 1em', async () => {
     globalCache.clear();
     const icon1 = shallowMount(CachedIcon, {
       propsData: { name: '<svg width="32" height="32" viewBox="0 0 32 32"><path d="M0 0h32v32H0z"/></svg>' },
@@ -170,13 +236,23 @@ describe('CachedIcon', () => {
     await flushPromises();
     expect(icon1.html()).toContain('kladivo');
   });
-  it('renders a raster image directly, without fetching or sanitizing it', async () => {
+  it('renders a raster image directly, without fetching or sanitising it', async () => {
     const rc = requestsCount;
     globalCache.clear();
     const icon1 = shallowMount(CachedIcon, { propsData: { name: '/images/photo.png' } });
     await flushPromises();
     expect(icon1.html()).toContain('<img src="/images/photo.png" alt="">');
     expect(requestsCount).toEqual(rc); // no HTTP request made, the img tag lets the browser handle it
+  });
+  it('renders a raster URL from a custom provider as an image without a request', async () => {
+    const rc = requestsCount;
+    globalCache.clear();
+    registerIconProvider('img', (name) => `/x/${name}.png`);
+    const icon1 = shallowMount(CachedIcon, { propsData: { name: 'img-photo' } });
+    await flushPromises();
+    expect(icon1.find('img').attributes()).toMatchObject({ src: '/x/photo.png', alt: '' });
+    expect(icon1.find('svg').exists()).toBe(false);
+    expect(requestsCount).toEqual(rc);
   });
   it('hides an icon without an accessible name from assistive technology', async () => {
     globalCache.clear();
@@ -207,7 +283,7 @@ describe('CachedIcon', () => {
     await flushPromises();
     expect(icon1.html()).toContain('<img src="/images/photo.JPEG?v=2" alt="">');
   });
-  it('rejects a response that is not a valid SVG instead of sanitizing it blindly', async () => {
+  it('rejects a response that is not a valid SVG instead of sanitising it blindly', async () => {
     globalCache.clear();
     const icon1 = shallowMount(CachedIcon, { propsData: { name: '/images/not-really-svg' } });
     await flushPromises();
@@ -240,6 +316,46 @@ describe('CachedIcon', () => {
     expect(icon1.find('img').exists()).toBe(false);
     expect(icon1.html()).toContain('kladivo');
     expect(icon1.emitted('icon-loaded')).toStrictEqual([['/images/photo.png'], ['/test.svg']]);
+  });
+  it('keeps the new icon when the previous icon finishes loading after the name changed', async () => {
+    globalCache.clear();
+    const loadedB = shallowMount(CachedIcon, { propsData: { name: '/test.svg' } });
+    await flushPromises();
+    expect(loadedB.html()).toContain('kladivo');
+    const icon1 = shallowMount(CachedIcon, { propsData: { name: '/held-a.svg' } });
+    await flushPromises();
+    expect(held.has('/held-a.svg')).toBe(true);
+    await icon1.setProps({ name: '/test.svg' });
+    await flushPromises();
+    expect(icon1.html()).toContain('kladivo');
+    held.get('/held-a.svg')!({ data: '<svg id="icon-a"></svg>' });
+    await flushPromises();
+    expect(icon1.html()).toContain('kladivo');
+    expect(icon1.html()).not.toContain('icon-a');
+    expect(icon1.emitted('icon-loaded')).toStrictEqual([['/test.svg']]);
+
+    const rc = requestsCount;
+    const laterA = shallowMount(CachedIcon, { propsData: { name: '/held-a.svg' } });
+    const laterB = shallowMount(CachedIcon, { propsData: { name: '/test.svg' } });
+    await flushPromises();
+    expect(laterA.html()).toContain('icon-a');
+    expect(laterA.html()).not.toContain('kladivo');
+    expect(laterB.html()).toContain('kladivo');
+    expect(laterB.html()).not.toContain('icon-a');
+    expect(requestsCount).toEqual(rc);
+  });
+  it('emits icon-loaded once when the name changes away and back while the icon is loading', async () => {
+    globalCache.clear();
+    const icon1 = shallowMount(CachedIcon, { propsData: { name: '/held-c.svg' } });
+    await flushPromises();
+    await icon1.setProps({ name: '/test.svg' });
+    await flushPromises();
+    await icon1.setProps({ name: '/held-c.svg' });
+    await flushPromises();
+    held.get('/held-c.svg')!({ data: '<svg id="icon-c"></svg>' });
+    await flushPromises();
+    expect(icon1.html()).toContain('icon-c');
+    expect(icon1.emitted('icon-loaded')).toStrictEqual([['/test.svg'], ['/held-c.svg']]);
   });
   it('fetches icons from a registered custom provider', async () => {
     globalCache.clear();
