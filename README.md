@@ -14,7 +14,7 @@ source.
 * Renders sanitised SVG
 * Also renders raster images (png, jpg, jpeg, gif, webp, bmp, ico, avif), recognised by their URL's extension and
   handed straight to the browser, unsanitised, since there's no markup for DOMPurify to sanitise
-* Rejects a URL that resolves to neither a raster image nor a valid SVG, instead of rendering it half-sanitised
+* Rejects a URL that resolves to neither a raster image nor a valid SVG
 * Loads from CDN, any local URL, any full URL or SVG literal
   * 'ion-*': loads from ionicons repository
   * 'mdi-*': loads from material design icons repository
@@ -22,7 +22,7 @@ source.
 * Register your own repositories using `registerIconProvider(prefix: string, urlBuilder: (name: string) => string)`
 * Caches loaded icons: an icon that has loaded is requested only once as long as the app is running
 * Retries icons that fail to load for a reason that may pass, see [Failed loads](#failed-loads)
-* Applies currentColor to icons: if colour is not otherwise specified, icons will have same color as HTML text
+* Applies currentColor to icons: if colour is not otherwise specified, icons have the same colour as the surrounding text
 * Sizes icons to the surrounding text by default, see [Sizing and styling](#sizing-and-styling)
 * Hidden from assistive technology unless named with `aria-label`, see [Accessibility](#accessibility)
 * Safe for server-side rendering: icons load in the browser after mount, see [Server-side rendering](#server-side-rendering)
@@ -47,7 +47,7 @@ npm install --save vue-cached-icon
     <!-- raster images are recognised by extension and rendered directly as an <img>, unsanitised -->
     <cached-icon name="/images/my-custom-icon.png"/>
 
-    <!-- will display the provided SVG, but with all processing (sanitizing, applying currentColor) -->
+    <!-- will display the provided SVG, but with all processing (sanitising, applying currentColor) -->
     <cached-icon :name="mySvgLiteral"/>
   </div>
 </template>
