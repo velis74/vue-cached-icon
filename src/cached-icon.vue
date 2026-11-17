@@ -64,6 +64,7 @@ const fetchSVG = async (name: string, url: string, attempt: number): Promise<Res
   return { data: augment(svg) };
 };
 
+let unmounted = false;
 let retryTimer: ReturnType<typeof setTimeout> | undefined;
 let unregisterFailedIcon: (() => void) | undefined;
 const cancelRetry = () => {
@@ -118,7 +119,7 @@ const loadSVG = async (attempt = 1) => {
   } catch (err: unknown) {
     if (!(err instanceof IconLoadError)) {
       console.error(`Failed loading CachedIcon. Wrong icon name or URL? (${name})`, err);
-    } else if (name === props.name) {
+    } else if (!unmounted && name === props.name) {
       scheduleRetry(name, err); // the icon still shows this name and keeps showing the ellipsis until a retry succeeds
     }
   }
@@ -132,7 +133,10 @@ watch(
     loadSVG();
   },
 );
-onBeforeUnmount(cancelRetry);
+onBeforeUnmount(() => {
+  unmounted = true;
+  cancelRetry();
+});
 
 // loading starts on mount, which does not run during server-side rendering
 onMounted(() => loadSVG());
