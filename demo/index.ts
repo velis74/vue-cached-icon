@@ -4,4 +4,4 @@ import CachedIconDemoApp from './cached-icon-demo.vue';
 
 const app = createApp(CachedIconDemoApp);
 
-app.mount('body');
+app.mount('#app');
