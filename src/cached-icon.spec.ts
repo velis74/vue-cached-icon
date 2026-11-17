@@ -40,9 +40,18 @@ describe('CachedIcon', () => {
     globalCache.clear();
     const icon1 = shallowMount(CachedIcon, { propsData: { name: 'accessibility-outline' } });
     await flushPromises();
-    expect(icon1.html()).toContain('span');
+    expect(icon1.find('.cached-icon-wrapper').exists()).toBe(true);
     await icon1.setProps({ name: undefined });
-    expect(icon1.html()).toMatch('');
+    expect(icon1.find('.cached-icon-wrapper').exists()).toBe(false);
+    expect(icon1.find('svg').exists()).toBe(false);
+  });
+  it('makes no request when mounted without a name', async () => {
+    const rc = requestsCount;
+    globalCache.clear();
+    const icon1 = shallowMount(CachedIcon);
+    await flushPromises();
+    expect(icon1.find('.cached-icon-wrapper').exists()).toBe(false);
+    expect(requestsCount).toEqual(rc);
   });
   it("emits event when rendered and there's a SVG in the DOM", async () => {
     globalCache.clear();
