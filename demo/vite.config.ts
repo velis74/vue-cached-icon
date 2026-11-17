@@ -5,7 +5,7 @@ import eslint from 'vite-plugin-eslint';
 
 export default defineConfig({
   plugins: [
-    vue({ template: { compilerOptions: { compatConfig: { MODE: 2 } } } }),
+    vue(),
     {
       // do not fail on serve (i.e. local development)
       ...eslint({
