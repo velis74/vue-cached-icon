@@ -4,7 +4,7 @@
     "declaration": true,
     "outDir": "dist",
     "types": ["vitest/globals"],
-    "module": "es2015",
+    "module": "esnext",
     "moduleResolution": "bundler"
   },
   "include": ["src/**/*"],
