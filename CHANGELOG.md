@@ -3,14 +3,16 @@
 ## 3.2.2 (2026-11-17)
 
 - An icon whose `name` changes while the previous icon is still loading no longer shows the previous icon when that
-  load finishes.
+  load finishes; a name changed away and back loads, emits `icon-loaded` and retries once.
 - An icon unmounted while its load fails is not registered for retries, so `retryFailedIcons()` and the `online`
   event do not request it again.
-- Every `<title>` of an SVG is removed, also when it has several.
+- Every `<title>` of an SVG is removed, also one with attributes or spanning lines; the elements between two titles
+  are kept.
 - During server-side rendering and before mount the component renders an empty `<span class="cached-icon-wrapper">`
   with its accessibility and passed-through attributes; with an empty `name` it renders nothing.
 - The UMD build exposes the global `VueCachedIcon` and expects the globals `Vue`, `axios` and `DOMPurify`.
-- The class `cached-icon-own-size` lets an SVG keep its own `width` / `height`; the wrapper takes the size of the SVG.
+- The class `cached-icon-own-size` lets an SVG keep its own `width` / `height`; the wrapper takes the size of the SVG,
+  and a raster image renders at its natural size.
 
 ## 3.2.1 (2026-11-14)
 
