@@ -158,6 +158,40 @@ describe('CachedIcon', () => {
     expect(icon1.html()).not.toContain('Warning');
     expect(icon1.html()).toContain('fill="currentColor"');
   });
+  it('removes every title and keeps the drawing elements between them', async () => {
+    globalCache.clear();
+    const icon1 = shallowMount(CachedIcon, {
+      propsData: {
+        name:
+          '<svg viewBox="0 0 10 10"><title>First</title><path id="p1" d="M0 0h1v1z"/>' +
+          '<circle id="c1" cx="5" cy="5" r="1"/><title>Second</title><rect id="r1" width="2" height="2"/></svg>',
+      },
+    });
+    await flushPromises();
+    const svg = icon1.find('svg');
+    expect(svg.exists()).toBe(true);
+    expect(['p1', 'c1', 'r1'].map((id) => svg.find(`#${id}`).exists())).toStrictEqual([true, true, true]);
+    expect(svg.find('title').exists()).toBe(false);
+    expect(icon1.html()).not.toContain('First');
+    expect(icon1.html()).not.toContain('Second');
+  });
+  it('removes a title with attributes and a title spanning lines', async () => {
+    globalCache.clear();
+    const icon1 = shallowMount(CachedIcon, {
+      propsData: {
+        name:
+          '<svg viewBox="0 0 10 10"><title id="t1" lang="en">Labelled</title><path id="p1" d="M0 0h1v1z"/>' +
+          '<title\n  lang="en"\n>Spanning\nlines</title\n><path id="p2" d="M1 1h1v1z"/></svg>',
+      },
+    });
+    await flushPromises();
+    const svg = icon1.find('svg');
+    expect(svg.exists()).toBe(true);
+    expect(svg.find('#p1').exists()).toBe(true);
+    expect(svg.find('#p2').exists()).toBe(true);
+    expect(svg.find('title').exists()).toBe(false);
+    expect(icon1.html()).not.toMatch(/Labelled|Spanning|lines/);
+  });
   it('gives a size to icons that only declare a viewBox, and ships default styling', async () => {
     globalCache.clear();
     const icon1 = shallowMount(CachedIcon, { propsData: { name: 'ion-warning' } });
