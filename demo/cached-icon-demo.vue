@@ -2,11 +2,11 @@
   <div>
     <p>This small demo shows how the component works</p>
     <p>
-      <label for="#icon-selector">Icon to load:</label>
+      <label for="icon-selector">Icon to load:</label>
       <select id="icon-selector" v-model="icon">
         <option>mdi-airplane</option>
         <option>fa-house</option>
-        <option selected>ion-warning</option>
+        <option>ion-warning</option>
         <option>ion-chatbox-ellipses-outline</option>
         <option>ion-cog-outline</option>
         <option>ion-construct-outline</option>

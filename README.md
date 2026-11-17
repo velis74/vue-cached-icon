@@ -14,15 +14,15 @@ source.
 * Renders sanitised SVG
 * Also renders raster images (png, jpg, jpeg, gif, webp, bmp, ico, avif), recognised by their URL's extension and
   handed straight to the browser, unsanitised, since there's no markup for DOMPurify to sanitise
-* Rejects a URL that resolves to neither a raster image nor a valid SVG, instead of rendering it half-sanitised
+* Rejects a URL that resolves to neither a raster image nor a valid SVG
 * Loads from CDN, any local URL, any full URL or SVG literal
   * 'ion-*': loads from ionicons repository
   * 'mdi-*': loads from material design icons repository
   * 'fa-*': loads from font-awesome repository
 * Register your own repositories using `registerIconProvider(prefix: string, urlBuilder: (name: string) => string)`
-* Caches loaded icons, there will be only one HTTP request per icon as long as the app is running
+* Caches loaded icons: an icon that has loaded is requested only once as long as the app is running
 * Retries icons that fail to load for a reason that may pass, see [Failed loads](#failed-loads)
-* Applies currentColor to icons: if colour is not otherwise specified, icons will have same color as HTML text
+* Applies currentColor to icons: if colour is not otherwise specified, icons have the same colour as the surrounding text
 * Sizes icons to the surrounding text by default, see [Sizing and styling](#sizing-and-styling)
 * Hidden from assistive technology unless named with `aria-label`, see [Accessibility](#accessibility)
 * Safe for server-side rendering: icons load in the browser after mount, see [Server-side rendering](#server-side-rendering)
@@ -47,7 +47,7 @@ npm install --save vue-cached-icon
     <!-- raster images are recognised by extension and rendered directly as an <img>, unsanitised -->
     <cached-icon name="/images/my-custom-icon.png"/>
 
-    <!-- will display the provided SVG, but with all processing (sanitizing, applying currentColor) -->
+    <!-- will display the provided SVG, but with all processing (sanitising, applying currentColor) -->
     <cached-icon :name="mySvgLiteral"/>
   </div>
 </template>
@@ -59,12 +59,18 @@ npm install --save vue-cached-icon
 </script>
 ```
 
-The component emits `icon-loaded` with the icon name once the icon has rendered.
+The component emits `icon-loaded` with the icon name when it sets the icon's content; the DOM shows the icon after
+Vue's next update (`await nextTick()`).
 
 Besides `CachedIcon`, `registerIconProvider` and `retryFailedIcons` (see [Failed loads](#failed-loads)) the package
-exports `resolveProviderUrl(name)`, which returns the URL a
-name resolves to, `iconProviders`, the registry of providers by prefix, and `augment(svg)`, the sanitisation and
-`currentColor` processing applied to every SVG.
+exports `resolveProviderUrl(name)`, which returns the URL a name resolves to, `iconProviders`, the registry of
+providers by prefix, its type `IconProvidersRegistry` (`Record<string, (name: string) => string>`), and `augment(svg)`,
+the sanitisation and `currentColor` processing applied to every SVG.
+
+### Props
+
+* `name?: string`: the icon to show. A provider-prefixed name (`ion-warning`, `mdi-account`, a registered prefix), a
+  URL of an SVG, a URL of a raster image or an SVG literal. An empty or missing `name` renders nothing.
 
 ## Accessibility
 
@@ -116,14 +122,24 @@ rules win without `!important`:
 .toolbar .cached-icon-wrapper { font-size: 1.5rem; }
 ```
 
-SVGs that declare their own `width` / `height` keep them. Raster images are sized the same way through the wrapper,
-with `object-fit: contain` so their aspect ratio is preserved rather than stretched to fill it.
+Every SVG fills the wrapper, also one that declares its own `width` / `height`. Raster images are sized the same way
+through the wrapper, with `object-fit: contain` so their aspect ratio is preserved rather than stretched to fill it.
+
+An SVG keeps its own size with the class `cached-icon-own-size` on the component:
+
+```html
+<cached-icon name="/img/logo.svg" class="cached-icon-own-size" />
+```
+
+The SVG then renders at its `width` / `height` attributes and the wrapper takes the size of the SVG. A dimension the SVG
+does not declare stays `1em`. A raster image with this class renders at its natural size.
 
 ## Server-side rendering
 
 During server-side rendering (Nuxt, VitePress, vite-ssg …) the component renders an empty
-`<span class="cached-icon-wrapper">`: it neither fetches nor sanitises anything on the server. The icon loads once the
-component is mounted in the browser, so the server-rendered markup always matches the first client render and
+`<span class="cached-icon-wrapper">` with the same accessibility attributes and passed-through attributes as a loaded
+icon; with an empty `name` it renders nothing. It neither fetches nor sanitises anything on the server. The icon loads
+once the component is mounted in the browser, so the server-rendered markup matches the first client render and
 hydrates without mismatches. Icons are therefore not part of the static HTML.
 
 ## Contributing
