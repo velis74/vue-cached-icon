@@ -131,8 +131,9 @@ does not declare stays `1em`.
 ## Server-side rendering
 
 During server-side rendering (Nuxt, VitePress, vite-ssg …) the component renders an empty
-`<span class="cached-icon-wrapper">`: it neither fetches nor sanitises anything on the server. The icon loads once the
-component is mounted in the browser, so the server-rendered markup always matches the first client render and
+`<span class="cached-icon-wrapper">` with the same accessibility attributes and passed-through attributes as a loaded
+icon; with an empty `name` it renders nothing. It neither fetches nor sanitises anything on the server. The icon loads
+once the component is mounted in the browser, so the server-rendered markup matches the first client render and
 hydrates without mismatches. Icons are therefore not part of the static HTML.
 
 ## Contributing
