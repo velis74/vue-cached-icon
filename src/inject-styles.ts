@@ -2,7 +2,12 @@
 // no matter how many icons are mounted.
 export const DEFAULT_ICON_CSS =
   '.cached-icon-wrapper{display:inline-flex;align-items:center;justify-content:center;width:1em;height:1em}' +
-  '.cached-icon-wrapper>svg{width:100%;height:100%}' +
+  // :where() keeps the specificity of .cached-icon-wrapper>svg, so consumer overrides of that selector still win
+  '.cached-icon-wrapper:where(:not(.cached-icon-own-size))>svg{width:100%;height:100%}' +
+  // opt-in: the svg keeps its width / height attributes, falling back to 1em, and the wrapper takes its size
+  '.cached-icon-wrapper.cached-icon-own-size{width:auto;height:auto}' +
+  '.cached-icon-own-size>svg:not([width]){width:1em}' +
+  '.cached-icon-own-size>svg:not([height]){height:1em}' +
   // object-fit is needed here because, unlike an SVG's viewBox, a raster image has no built-in way to keep its
   // aspect ratio when width/height are forced to 100% of the wrapper
   '.cached-icon-wrapper>img{width:100%;height:100%;object-fit:contain}';
