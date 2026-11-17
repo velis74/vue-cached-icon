@@ -59,7 +59,8 @@ npm install --save vue-cached-icon
 </script>
 ```
 
-The component emits `icon-loaded` with the icon name once the icon has rendered.
+The component emits `icon-loaded` with the icon name when it sets the icon's content; the DOM shows the icon after
+Vue's next update (`await nextTick()`).
 
 Besides `CachedIcon`, `registerIconProvider` and `retryFailedIcons` (see [Failed loads](#failed-loads)) the package
 exports `resolveProviderUrl(name)`, which returns the URL a
