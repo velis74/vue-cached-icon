@@ -17,9 +17,8 @@ export function registerIconProvider(prefix: string, urlBuilder: (name: string) 
 }
 
 /**
- * Returns URL for the prefixed icon name
- * @param name name of icon with provider prefix. if no provider is registered for the prefix (or there is no prefix)
- * it will return the name itself as we assume it's url to the icon
+ * Returns the URL built by the provider registered for the name's prefix, otherwise the name itself, used as a URL
+ * @param name icon name, optionally with a provider prefix
  */
 export function resolveProviderUrl(name: string): string {
   const dashIndex = name.indexOf('-');
