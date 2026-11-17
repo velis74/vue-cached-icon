@@ -4,6 +4,8 @@
 
 - An icon whose `name` changes while the previous icon is still loading no longer shows the previous icon when that
   load finishes.
+- An icon unmounted while its load fails is not registered for retries, so `retryFailedIcons()` and the `online`
+  event do not request it again.
 - Every `<title>` of an SVG is removed, also when it has several.
 - During server-side rendering and before mount the component renders an empty `<span class="cached-icon-wrapper">`
   with its accessibility and passed-through attributes; with an empty `name` it renders nothing.
