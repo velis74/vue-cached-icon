@@ -20,7 +20,7 @@ source.
   * 'mdi-*': loads from material design icons repository
   * 'fa-*': loads from font-awesome repository
 * Register your own repositories using `registerIconProvider(prefix: string, urlBuilder: (name: string) => string)`
-* Caches loaded icons, there will be only one HTTP request per icon as long as the app is running
+* Caches loaded icons: an icon that has loaded is requested only once as long as the app is running
 * Retries icons that fail to load for a reason that may pass, see [Failed loads](#failed-loads)
 * Applies currentColor to icons: if colour is not otherwise specified, icons will have same color as HTML text
 * Sizes icons to the surrounding text by default, see [Sizing and styling](#sizing-and-styling)
