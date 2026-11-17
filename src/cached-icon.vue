@@ -1,6 +1,6 @@
 <template>
-  <span v-if="imgSrc" class="cached-icon-wrapper" v-bind="a11y"><img :src="imgSrc" alt="" /></span>
-  <span v-else-if="loadedSvg" :key="loadedSvg" class="cached-icon-wrapper" v-bind="a11y" v-html="loadedSvg" />
+  <span v-if="imgSrc" v-bind="a11y" class="cached-icon-wrapper"><img :src="imgSrc" alt="" /></span>
+  <span v-else-if="loadedSvg" v-bind="a11y" :key="loadedSvg" class="cached-icon-wrapper" v-html="loadedSvg" />
 </template>
 
 <script setup lang="ts">
