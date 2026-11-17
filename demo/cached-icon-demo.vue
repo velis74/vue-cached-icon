@@ -35,7 +35,7 @@
     </p>
     <p>
       Icon, loaded from a custom url.<br />
-      <cached-icon class="bigger" :name="logoUrl" />
+      <cached-icon class="bigger" name="https://www.velis.si/images/logo_text.svg" />
     </p>
     <p>
       And finally, one with literal svg <small>(and with a crude, brute-force animation too)</small><br />
@@ -47,8 +47,6 @@
 import { computed, onMounted, ref } from 'vue';
 
 import CachedIcon from '../src/cached-icon.vue';
-
-import logoUrl from './logo_text.svg?url';
 
 const icon = ref('fa-house');
 const literalSvg = `
