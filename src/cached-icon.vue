@@ -33,30 +33,33 @@ const setCache = (name: string, value: IconDefOrPromise) => {
   globalCache.set(name, value);
   return value;
 };
+/** @param svg augmented markup */
 const setLoadedSVG = (name: string, svg: string) => {
-  loadedSvg.value = augment(svg);
+  loadedSvg.value = svg;
   emit('icon-loaded', name);
 };
 const setLoadedImg = (name: string, url: string) => {
   imgSrc.value = url;
   emit('icon-loaded', name);
 };
-// Validation is part of the cached promise: a response that is not an SVG rejects for every icon awaiting it, so none
-// of them sanitises and renders it. A failure replaces the promise in the cache and is logged once, by the icon that
-// made the request.
+// Validation and augmentation are part of the cached promise: a response that is not an SVG rejects for every icon
+// awaiting it, and a valid one resolves to augmented markup for all of them. A failure replaces the promise in the
+// cache and is logged once, by the icon that made the request.
 const fetchSVG = async (name: string, url: string, attempt: number): Promise<ResolvedIconGetResponse> => {
+  let svg: string;
   try {
     const { data } = await axios.get(url);
     if (typeof data !== 'string' || !/<svg[\s>]/i.test(data)) {
       throw new IconLoadError(`Response from "${url}" is not a valid SVG`, attempt);
     }
-    return { data };
+    svg = data;
   } catch (err: unknown) {
     const failure = toIconLoadError(err, url, attempt);
     globalCache.set(name, failure);
     console.error(`Failed loading CachedIcon. Wrong icon name or URL? (${name})`, failure);
     throw failure;
   }
+  return { data: augment(svg) };
 };
 
 let retryTimer: ReturnType<typeof setTimeout> | undefined;
@@ -90,24 +93,24 @@ const loadSVG = async (attempt = 1) => {
   loadedSvg.value = '&hellip;'; // ellipsis while we're loading
   try {
     if (globalCache.check(name)) {
-      // icon is already in cache
+      // icon is already in cache, as augmented markup or a promise of it
       const svg = await globalCache.get(name);
       if (name !== props.name) return; // the icon shows another name by now
       setLoadedSVG(name, svg as string);
     } else if (name.toLowerCase().includes('<svg')) {
       // icon is a svg image string literal
-      setLoadedSVG(name, name);
+      setLoadedSVG(name, augment(name));
     } else {
       // a registered provider prefix (ion-, mdi-, fa-, ...) resolves to its URL, any other name is used as a URL
       const url = resolveProviderUrl(name);
       if (RASTER_EXTENSION_RE.test(url)) {
         setLoadedImg(name, url);
       } else {
-        // first we set cache to the validating fetch promise, so that concurrent loads of this icon share its outcome
-        const res1 = (await setCache(name, fetchSVG(name, url, attempt))) as ResolvedIconGetResponse;
-        setCache(name, augment(res1.data)); // then to sanitized svg, also when the icon shows another name by now
+        // first we set cache to the fetch promise, so that concurrent loads of this icon share its outcome
+        const { data } = (await setCache(name, fetchSVG(name, url, attempt))) as ResolvedIconGetResponse;
+        setCache(name, data); // then to its augmented markup, also when the icon shows another name by now
         if (name !== props.name) return;
-        setLoadedSVG(name, res1.data);
+        setLoadedSVG(name, data);
       }
     }
   } catch (err: unknown) {
