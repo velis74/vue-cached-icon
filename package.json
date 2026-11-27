@@ -2,14 +2,14 @@
   "name": "vue-cached-icon",
   "version": "3.2.2",
   "description": "Caching asynchronous icons loader for Vue. Supports Ionicons, Material Design Icons, Font Awesome, custom providers, SVG literals and URLs. Renders sanitised SVG with currentColor support, also renders raster image URLs directly.",
-  "author": "Jure Erznožnik",
+  "author": "Jure Erznožnik <jure.erznoznik@velis.si>",
   "type": "module",
   "scripts": {
     "dev": "npm run dev --workspace=demo",
     "demo:build": "npm run build --workspace=demo --",
     "build": "vite build && vue-tsc --noEmit",
     "test": "vitest run --coverage",
-    "lint": "eslint ."
+    "lint": "node scripts/lint.mjs"
   },
   "main": "dist/vue-cached-icon.umd.cjs",
   "types": "dist/vue-cached-icon.vue.d.ts",
@@ -40,9 +40,13 @@
     "ssr"
   ],
   "license": "BSD-3-Clause",
+  "homepage": "https://docs.velis.si/vue-cached-icon.html",
   "repository": {
     "type": "git",
-    "url": "git@github.com:velis74/vue-cached-icon.git"
+    "url": "git+https://github.com/velis74/vue-cached-icon.git"
+  },
+  "bugs": {
+    "url": "https://github.com/velis74/vue-cached-icon/issues"
   },
   "peerDependencies": {
     "axios": "^1.1.3",
@@ -57,6 +61,7 @@
     "@vue/tsconfig": "^0.8.1",
     "eslint-config-velis": "^2.0.9",
     "jsdom": "^26",
+    "markdownlint-cli2": "^0.24.2",
     "rollup-plugin-visualizer": "^5.14.0",
     "typescript": "^5",
     "vite": "^5",

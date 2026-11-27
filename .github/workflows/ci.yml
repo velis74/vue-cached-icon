@@ -1,0 +1,68 @@
+name: CI
+
+# A pull request runs every job once; a push runs them only on main, where the merge result is
+# checked again.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - run: npm ci
+      # eslint, markdownlint and vue-tsc, report only.
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - run: npm run demo:build
+      - uses: actions/upload-artifact@v7
+        with:
+          name: node-coverage
+          path: coverage/coverage-final.json
+        if: github.event_name == 'pull_request'
+
+  coverage:
+    name: Incremental coverage check
+    runs-on: ubuntu-latest
+    needs: [node]
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v8
+        with:
+          name: node-coverage
+      - name: Incremental coverage check
+        uses: velis74/incremental-coverage-check@v3
+        with:
+          coverage-files: coverage-final.json
+          # vitest measures src/ only; the demo and the lint script are not library code.
+          extra-ignore-patterns: |
+            demo/**
+            scripts/**
+            src/index.ts
+          base-ref: ${{ github.base_ref }}
+          head-ref: HEAD
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pr-number: ${{ github.event.pull_request.number }}
+
+  # The single required status check: it fails when any other job failed or was cancelled. A skipped
+  # job (the coverage check on a push) does not fail it.
+  all-green:
+    runs-on: ubuntu-latest
+    needs: [node, coverage]
+    permissions: {}
+    if: always()
+    steps:
+      - run: exit 1
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')

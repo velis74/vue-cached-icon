@@ -5,9 +5,9 @@ Caching icon loader with an emphasis for loading the icons directly from the CDN
 Also supports svg string literals, urls to raster images (png, jpg, gif, webp, bmp, ico, avif) or urls to svg as
 source.
 
-![Demo](demo.gif)
+![Demo](https://raw.githubusercontent.com/velis74/vue-cached-icon/main/demo.gif)
 
-[Live demo](https://docs.velis.si/vue-cached-icon/demo/)
+[Documentation](https://docs.velis.si/vue-cached-icon.html) · [Live demo](https://docs.velis.si/vue-cached-icon/demo/)
 
 ## Features
 
