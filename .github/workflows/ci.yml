@@ -61,6 +61,7 @@ jobs:
   all-green:
     runs-on: ubuntu-latest
     needs: [node, coverage]
+    permissions: {}
     if: always()
     steps:
       - run: exit 1
