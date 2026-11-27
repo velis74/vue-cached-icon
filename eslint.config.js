@@ -6,4 +6,12 @@ config.forEach((conf) => {
   }
 });
 
-export default [{ ignores: ['.claude/', 'dist/', 'demo/dist/', 'coverage/'] }, ...config];
+export default [
+  { ignores: ['.claude/', 'dist/', 'demo/dist/', 'coverage/'] },
+  ...config,
+  {
+    // Node scripts run outside the browser bundle.
+    files: ['scripts/**/*.mjs'],
+    languageOptions: { globals: { process: 'readonly' } },
+  },
+];

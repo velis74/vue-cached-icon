@@ -1,0 +1,8 @@
+{
+  "config": {
+    "MD013": { "line_length": 120, "tables": false, "code_blocks": false },
+    // Keep a Changelog repeats Added / Changed / Fixed under every version
+    "MD024": { "siblings_only": true }
+  },
+  "ignores": ["**/node_modules/**", "**/dist/**", "coverage/**", ".claude/**"]
+}
