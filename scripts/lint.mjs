@@ -16,6 +16,7 @@ const steps = [
   ['eslint', ...fixArg, '.'],
   ['markdownlint-cli2', ...fixArg, '**/*.md'],
   ['vue-tsc', '--noEmit'],
+  ['vue-tsc', '--noEmit', '-p', 'demo/tsconfig.json'],
 ];
 
 let failed = false;
