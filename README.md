@@ -85,6 +85,9 @@ text next to it names the control. An icon that carries meaning on its own gets 
 
 The SVG's own `<title>` is removed, and a raster image has an empty `alt`: the name comes only from the wrapper.
 
+The wrapper is one element for the icon's whole life: loading the icon or changing `name` replaces only its content.
+Attributes, listeners and focus given to `<cached-icon>` (e.g. `tabindex="0"` with `role="button"`) stay on it.
+
 ## Failed loads
 
 An icon that fails to load shows `…`, and the failure is logged to the console once per request. All icons with the

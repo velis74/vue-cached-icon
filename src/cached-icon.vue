@@ -1,7 +1,5 @@
 <template>
-  <span v-if="imgSrc" v-bind="a11y" class="cached-icon-wrapper"><img :src="imgSrc" alt="" /></span>
-  <span v-else-if="loadedSvg" v-bind="a11y" :key="loadedSvg" class="cached-icon-wrapper" v-html="loadedSvg" />
-  <span v-else-if="name" v-bind="a11y" class="cached-icon-wrapper" />
+  <span v-if="name" v-bind="a11y" class="cached-icon-wrapper" v-html="content" />
 </template>
 
 <script setup lang="ts">
@@ -30,6 +28,12 @@ const a11y = computed(() =>
 // while both are empty, a named icon renders an empty wrapper: on the server and in the first client render
 const loadedSvg = ref('');
 const imgSrc = ref('');
+
+// one element for every state of a named icon: a load replaces its content, so focus and listeners stay
+const escapeAttribute = (value: string) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+const content = computed(() =>
+  imgSrc.value ? `<img src="${escapeAttribute(imgSrc.value)}" alt="">` : loadedSvg.value,
+);
 
 const setCache = (name: string, value: IconDefOrPromise) => {
   globalCache.set(name, value);

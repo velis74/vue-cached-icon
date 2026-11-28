@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.2.3 (2026-11-28)
+
+- The wrapper element stays the same while the icon loads and when `name` changes; only its content is replaced. A
+  focused icon (e.g. with `tabindex`) keeps the focus when its SVG arrives.
+
 ## 3.2.2 (2026-11-17)
 
 - An icon whose `name` changes while the previous icon is still loading no longer shows the previous icon when that

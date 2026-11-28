@@ -306,6 +306,32 @@ describe('CachedIcon', () => {
     expect(requestsCount).toEqual(rc + 1);
     expect(consoleError).toHaveBeenCalledTimes(1);
   });
+  it('keeps its root element, and the focus on it, while the icon loads and when the name changes', async () => {
+    globalCache.clear();
+    const icon1 = shallowMount(CachedIcon, {
+      propsData: { name: '/held-focus.svg' },
+      attrs: { tabindex: '0' },
+      attachTo: document.body,
+    });
+    const root = icon1.element as HTMLElement;
+    root.focus();
+    expect(document.activeElement).toBe(root);
+    held.get('/held-focus.svg')!({ data: '<svg id="focused"></svg>' });
+    await flushPromises();
+    expect(icon1.html()).toContain('focused');
+    await icon1.setProps({ name: '/images/photo.png' });
+    await flushPromises();
+    expect(icon1.find('img').exists()).toBe(true);
+    expect(icon1.element).toBe(root);
+    expect(document.activeElement).toBe(root);
+    icon1.unmount();
+  });
+  it('escapes a raster URL in the image source', async () => {
+    globalCache.clear();
+    const icon1 = shallowMount(CachedIcon, { propsData: { name: '/x" onerror="alert(1).png' } });
+    await flushPromises();
+    expect(icon1.find('img').attributes()).toStrictEqual({ src: '/x" onerror="alert(1).png', alt: '' });
+  });
   it('replaces the rendered icon when the name changes', async () => {
     globalCache.clear();
     const icon1 = shallowMount(CachedIcon, { propsData: { name: '/images/photo.png' } });
