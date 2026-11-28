@@ -125,8 +125,10 @@ rules win without `!important`:
 .toolbar .cached-icon-wrapper { font-size: 1.5rem; }
 ```
 
-Every SVG fills the wrapper, also one that declares its own `width` / `height`. Raster images are sized the same way
-through the wrapper, with `object-fit: contain` so their aspect ratio is preserved rather than stretched to fill it.
+Every SVG fills the wrapper, also one that declares its own `width` / `height`. An SVG with a `width` and `height` in
+pixels but no `viewBox` gets `viewBox="0 0 <width> <height>"`, so it scales to the wrapper instead of being cropped.
+Raster images are sized the same way through the wrapper, with `object-fit: contain` so their aspect ratio is preserved
+rather than stretched to fill it.
 
 An SVG keeps its own size with the class `cached-icon-own-size` on the component:
 

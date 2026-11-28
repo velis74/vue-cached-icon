@@ -4,6 +4,8 @@
 
 - The wrapper element stays the same while the icon loads and when `name` changes; only its content is replaced. A
   focused icon (e.g. with `tabindex`) keeps the focus when its SVG arrives.
+- An SVG with a `width` and `height` in pixels but no `viewBox` gets a `viewBox` of that size, so it scales to the
+  wrapper instead of being cropped.
 
 ## 3.2.2 (2026-11-17)
 
