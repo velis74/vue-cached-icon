@@ -85,6 +85,9 @@ text next to it names the control. An icon that carries meaning on its own gets 
 
 The SVG's own `<title>` is removed, and a raster image has an empty `alt`: the name comes only from the wrapper.
 
+The wrapper is one element for the icon's whole life: loading the icon or changing `name` replaces only its content.
+Attributes, listeners and focus given to `<cached-icon>` (e.g. `tabindex="0"` with `role="button"`) stay on it.
+
 ## Failed loads
 
 An icon that fails to load shows `…`, and the failure is logged to the console once per request. All icons with the
@@ -122,8 +125,10 @@ rules win without `!important`:
 .toolbar .cached-icon-wrapper { font-size: 1.5rem; }
 ```
 
-Every SVG fills the wrapper, also one that declares its own `width` / `height`. Raster images are sized the same way
-through the wrapper, with `object-fit: contain` so their aspect ratio is preserved rather than stretched to fill it.
+Every SVG fills the wrapper, also one that declares its own `width` / `height`. An SVG with a `width` and `height` in
+pixels but no `viewBox` gets `viewBox="0 0 <width> <height>"`, so it scales to the wrapper instead of being cropped.
+Raster images are sized the same way through the wrapper, with `object-fit: contain` so their aspect ratio is preserved
+rather than stretched to fill it.
 
 An SVG keeps its own size with the class `cached-icon-own-size` on the component:
 

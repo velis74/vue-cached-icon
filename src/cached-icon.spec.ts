@@ -230,6 +230,22 @@ describe('CachedIcon', () => {
     expect(icon1.html()).toContain('width="32"');
     expect(icon1.html()).not.toContain('1em');
   });
+  it('gives an SVG with a width and height but no viewBox a viewBox of that size, so it scales', async () => {
+    globalCache.clear();
+    const sized = shallowMount(CachedIcon, {
+      propsData: { name: '<svg width="220px" height="49"><path d="M0 0h220v49H0z"/></svg>' },
+    });
+    const relative = shallowMount(CachedIcon, {
+      propsData: { name: '<svg width="100%" height="49"><path d="M0 0h9v9H0z"/></svg>' },
+    });
+    const own = shallowMount(CachedIcon, {
+      propsData: { name: '<svg width="32" height="32" viewBox="4 4 24 24"><path d="M0 0h9v9H0z"/></svg>' },
+    });
+    await flushPromises();
+    expect(sized.find('svg').attributes('viewBox')).toBe('0 0 220 49');
+    expect(relative.find('svg').attributes()).not.toHaveProperty('viewBox');
+    expect(own.find('svg').attributes('viewBox')).toBe('4 4 24 24');
+  });
   it('loads svg from local server resource', async () => {
     globalCache.clear();
     const icon1 = shallowMount(CachedIcon, { propsData: { name: '/test.svg' } });
@@ -305,6 +321,32 @@ describe('CachedIcon', () => {
     }
     expect(requestsCount).toEqual(rc + 1);
     expect(consoleError).toHaveBeenCalledTimes(1);
+  });
+  it('keeps its root element, and the focus on it, while the icon loads and when the name changes', async () => {
+    globalCache.clear();
+    const icon1 = shallowMount(CachedIcon, {
+      propsData: { name: '/held-focus.svg' },
+      attrs: { tabindex: '0' },
+      attachTo: document.body,
+    });
+    const root = icon1.element as HTMLElement;
+    root.focus();
+    expect(document.activeElement).toBe(root);
+    held.get('/held-focus.svg')!({ data: '<svg id="focused"></svg>' });
+    await flushPromises();
+    expect(icon1.html()).toContain('focused');
+    await icon1.setProps({ name: '/images/photo.png' });
+    await flushPromises();
+    expect(icon1.find('img').exists()).toBe(true);
+    expect(icon1.element).toBe(root);
+    expect(document.activeElement).toBe(root);
+    icon1.unmount();
+  });
+  it('escapes a raster URL in the image source', async () => {
+    globalCache.clear();
+    const icon1 = shallowMount(CachedIcon, { propsData: { name: '/x" onerror="alert(1).png' } });
+    await flushPromises();
+    expect(icon1.find('img').attributes()).toStrictEqual({ src: '/x" onerror="alert(1).png', alt: '' });
   });
   it('replaces the rendered icon when the name changes', async () => {
     globalCache.clear();
